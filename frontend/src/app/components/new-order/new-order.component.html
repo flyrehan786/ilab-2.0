@@ -1,0 +1,139 @@
+<div class="fade-in">
+  <div class="page-header">
+    <h2 class="mb-0"><i class="bi bi-plus-circle me-2"></i>New Order</h2>
+  </div>
+
+  <form [formGroup]="orderForm" (ngSubmit)="onSubmit()">
+    <div class="row g-3">
+      <div class="col-md-8">
+        <div class="card mb-3">
+          <div class="card-header bg-white">
+            <h5 class="mb-0">Order Details</h5>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Patient *</label>
+                <select class="form-select" formControlName="patient_id">
+                  <option value="">Select Patient</option>
+                  <option *ngFor="let patient of patients" [value]="patient.id">
+                    {{ patient.name }} ({{ patient.patient_code }})
+                  </option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Referring Doctor</label>
+                <select class="form-select" formControlName="doctor_id">
+                  <option value="">Select Doctor</option>
+                  <option *ngFor="let doctor of doctors" [value]="doctor.id">
+                    {{ doctor.name }}
+                  </option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Priority</label>
+                <select class="form-select" formControlName="priority">
+                  <option value="normal">Normal</option>
+                  <option value="urgent">Urgent</option>
+                  <option value="stat">STAT</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Discount</label>
+                <input type="number" class="form-control" formControlName="discount" min="0">
+              </div>
+              <div class="col-md-12">
+                <label class="form-label">Notes</label>
+                <textarea class="form-control" formControlName="notes" rows="2"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header bg-white">
+            <h5 class="mb-0">Select Tests</h5>
+          </div>
+          <div class="card-body">
+            <div class="mb-3">
+              <input type="text" class="form-control" placeholder="Search tests..." 
+                     [(ngModel)]="searchTest" [ngModelOptions]="{standalone: true}" 
+                     (keyup)="loadTests()">
+            </div>
+            <div class="row g-2">
+              <div class="col-md-6" *ngFor="let test of tests">
+                <div class="card border">
+                  <div class="card-body p-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div>
+                        <strong>{{ test.name }}</strong>
+                        <div class="small text-muted">{{ test.test_code }}</div>
+                      </div>
+                      <div class="text-end">
+                        <div class="fw-bold text-primary">₹{{ test.price }}</div>
+                        <button type="button" class="btn btn-sm btn-outline-primary" 
+                                (click)="addTest(test)">
+                          <i class="bi bi-plus"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card sticky-top" style="top: 20px;">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Selected Tests</h5>
+          </div>
+          <div class="card-body">
+            <div *ngIf="selectedTests.length === 0" class="text-center text-muted py-4">
+              No tests selected
+            </div>
+            <div *ngFor="let test of selectedTests; let i = index" class="mb-2 pb-2 border-bottom">
+              <div class="d-flex justify-content-between align-items-start">
+                <div class="flex-grow-1">
+                  <div class="fw-bold">{{ test.name }}</div>
+                  <div class="small text-muted">{{ test.test_code }}</div>
+                </div>
+                <div class="text-end ms-2">
+                  <div class="fw-bold">₹{{ test.price }}</div>
+                  <button type="button" class="btn btn-sm btn-outline-danger" (click)="removeTest(i)">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer bg-white">
+            <div class="d-flex justify-content-between mb-2">
+              <span>Subtotal:</span>
+              <strong>₹{{ getTotalAmount() }}</strong>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span>Discount:</span>
+              <strong>₹{{ orderForm.value.discount || 0 }}</strong>
+            </div>
+            <hr>
+            <div class="d-flex justify-content-between mb-3">
+              <span class="h5 mb-0">Total:</span>
+              <span class="h5 mb-0 text-primary">₹{{ getFinalAmount() }}</span>
+            </div>
+            <button type="submit" class="btn btn-primary w-100" [disabled]="loading || selectedTests.length === 0">
+              <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+              <i *ngIf="!loading" class="bi bi-check-circle me-2"></i>
+              Create Order
+            </button>
+            <button type="button" class="btn btn-outline-secondary w-100 mt-2" routerLink="/orders">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>

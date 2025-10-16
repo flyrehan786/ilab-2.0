@@ -1,0 +1,51 @@
+/* Bootstrap Default Theme Styling */
+
+/* Main container */
+.main-container {
+  padding: 2rem;
+  min-height: calc(100vh - 56px);
+  background-color: #f8f9fa;
+}
+
+/* Navbar active link styling */
+.navbar-nav .nav-link.active {
+  font-weight: 600;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 0.25rem;
+}
+
+.navbar-nav .nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 0.25rem;
+}
+
+/* Navbar brand styling */
+.navbar-brand {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+/* Dropdown menu styling */
+.dropdown-menu {
+  min-width: 250px;
+}
+
+.dropdown-header {
+  font-weight: 600;
+  color: #495057;
+}
+
+/* Responsive adjustments */
+@media (max-width: 991px) {
+  .navbar-nav {
+    padding: 0.5rem 0;
+  }
+  
+  .navbar-nav .nav-link {
+    padding: 0.5rem 1rem;
+  }
+  
+  .main-container {
+    padding: 1rem;
+  }
+}

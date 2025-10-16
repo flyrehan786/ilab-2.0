@@ -1,0 +1,118 @@
+<div class="fade-in">
+  <div class="page-header d-flex justify-content-between align-items-center">
+    <h2 class="mb-0"><i class="bi bi-clipboard-data me-2"></i>Tests</h2>
+    <button class="btn btn-primary" (click)="openModal()">
+      <i class="bi bi-plus-circle me-2"></i>Add Test
+    </button>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div *ngIf="loading" class="text-center py-5">
+        <div class="spinner-border text-primary"></div>
+      </div>
+
+      <div *ngIf="!loading" class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Name</th>
+              <th>Category</th>
+              <th>Price</th>
+              <th>Sample Type</th>
+              <th>TAT (hrs)</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let test of tests">
+              <td><strong>{{ test.test_code }}</strong></td>
+              <td>{{ test.name }}</td>
+              <td><span class="badge bg-info">{{ test.category_name || 'N/A' }}</span></td>
+              <td>₹{{ test.price }}</td>
+              <td>{{ test.sample_type || 'N/A' }}</td>
+              <td>{{ test.turnaround_time || 'N/A' }}</td>
+              <td>
+                <button class="btn btn-sm btn-outline-primary me-1" (click)="openModal(test)">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" (click)="deleteTest(test.id)">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="tests.length === 0">
+              <td colspan="7" class="text-center text-muted py-4">No tests found</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Test Modal -->
+<div class="modal fade" id="testModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ editMode ? 'Edit Test' : 'Add Test' }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form [formGroup]="testForm" (ngSubmit)="onSubmit()">
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-8">
+              <label class="form-label">Test Name *</label>
+              <input type="text" class="form-control" formControlName="name">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Category</label>
+              <select class="form-select" formControlName="category_id">
+                <option value="">Select</option>
+                <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Price *</label>
+              <input type="number" class="form-control" formControlName="price">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Sample Type</label>
+              <input type="text" class="form-control" formControlName="sample_type">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">TAT (hours)</label>
+              <input type="number" class="form-control" formControlName="turnaround_time">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Normal Range</label>
+              <input type="text" class="form-control" formControlName="normal_range">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Unit</label>
+              <input type="text" class="form-control" formControlName="unit">
+            </div>
+            <div class="col-md-12">
+              <label class="form-label">Description</label>
+              <textarea class="form-control" formControlName="description" rows="2"></textarea>
+            </div>
+            <div class="col-md-12">
+              <label class="form-label">Preparation Instructions</label>
+              <textarea class="form-control" formControlName="preparation_instructions" rows="2"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" [disabled]="loading">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="testForm.invalid || loading">
+            <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+            <span *ngIf="!loading">{{ editMode ? 'Update' : 'Create' }}</span>
+            <span *ngIf="loading">Saving...</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

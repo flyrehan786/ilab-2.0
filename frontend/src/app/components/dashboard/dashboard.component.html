@@ -1,0 +1,142 @@
+<div class="fade-in">
+  <div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+      <h2 class="mb-0"><i class="bi bi-speedometer2 me-2"></i>Dashboard</h2>
+      <p class="text-muted mb-0">Welcome to Laboratory Management System</p>
+    </div>
+    <button class="btn btn-primary" routerLink="/orders/new">
+      <i class="bi bi-plus-circle me-2"></i>New Order
+    </button>
+  </div>
+
+  <div *ngIf="loading" class="loading-spinner">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+
+  <div *ngIf="!loading">
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-3">
+        <div class="card stat-card primary">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-muted mb-2">Total Patients</h6>
+              <h2 class="mb-0">{{ stats.totalPatients }}</h2>
+            </div>
+            <i class="bi bi-people text-primary" style="font-size: 48px; opacity: 0.3;"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="card stat-card success">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-muted mb-2">Today's Orders</h6>
+              <h2 class="mb-0">{{ stats.todayOrders }}</h2>
+            </div>
+            <i class="bi bi-clipboard-check text-success" style="font-size: 48px; opacity: 0.3;"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="card stat-card warning">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-muted mb-2">Pending Orders</h6>
+              <h2 class="mb-0">{{ stats.pendingOrders }}</h2>
+            </div>
+            <i class="bi bi-hourglass-split text-warning" style="font-size: 48px; opacity: 0.3;"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="card stat-card danger">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-muted mb-2">Today's Revenue</h6>
+              <h2 class="mb-0">₹{{ stats.todayRevenue | number:'1.2-2' }}</h2>
+            </div>
+            <i class="bi bi-currency-rupee text-danger" style="font-size: 48px; opacity: 0.3;"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3">
+      <!-- Recent Orders -->
+      <div class="col-md-8">
+        <div class="card">
+          <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Recent Orders</h5>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead>
+                  <tr>
+                    <th>Order #</th>
+                    <th>Patient</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let order of recentOrders">
+                    <td><strong>{{ order.order_number }}</strong></td>
+                    <td>
+                      <div>{{ order.patient_name }}</div>
+                      <small class="text-muted">{{ order.patient_code }}</small>
+                    </td>
+                    <td>{{ order.created_at | date:'short' }}</td>
+                    <td>
+                      <span class="badge" [ngClass]="getStatusBadgeClass(order.status)">
+                        {{ getStatusLabel(order.status) }}
+                      </span>
+                    </td>
+                    <td>
+                      <button class="btn btn-sm btn-outline-primary" [routerLink]="['/orders', order.id]">
+                        <i class="bi bi-eye"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr *ngIf="recentOrders.length === 0">
+                    <td colspan="5" class="text-center text-muted py-4">No recent orders</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Tests -->
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Top Tests (Last 30 Days)</h5>
+          </div>
+          <div class="card-body">
+            <div *ngFor="let test of topTests" class="mb-3">
+              <div class="d-flex justify-content-between mb-1">
+                <span>{{ test.name }}</span>
+                <strong>{{ test.count }}</strong>
+              </div>
+              <div class="progress" style="height: 8px;">
+                <div class="progress-bar bg-primary" [style.width.%]="(test.count / topTests[0]?.count * 100)"></div>
+              </div>
+            </div>
+            <div *ngIf="topTests.length === 0" class="text-center text-muted py-4">
+              No data available
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
