@@ -2,7 +2,7 @@ const db = require('../config/database');
 
 exports.getAllOrders = async (req, res) => {
   try {
-    const { status, patient_id, page = 1, limit = 10 } = req.query;
+    const { status, patient_id, page = 1, limit = 10, dateFrom, dateTo } = req.query;
     const offset = (page - 1) * limit;
 
     let query = `SELECT o.*, p.name as patient_name, p.patient_code, d.name as doctor_name
@@ -20,6 +20,16 @@ exports.getAllOrders = async (req, res) => {
     if (patient_id) {
       query += ' AND o.patient_id = ?';
       params.push(patient_id);
+    }
+
+    if (dateFrom) {
+      query += ' AND DATE(o.created_at) >= ?';
+      params.push(dateFrom);
+    }
+
+    if (dateTo) {
+      query += ' AND DATE(o.created_at) <= ?';
+      params.push(dateTo);
     }
 
     query += ' ORDER BY o.created_at DESC LIMIT ? OFFSET ?';
@@ -59,7 +69,7 @@ exports.getOrderById = async (req, res) => {
     }
 
     const [items] = await db.query(
-      `SELECT oi.*, tr.result_value, tr.result_text, tr.status as result_status, tr.remarks
+      `SELECT oi.*, tr.result_value, tr.result_text, tr.unit, tr.normal_range, tr.status as result_status, tr.remarks
        FROM patient_test_order_items oi
        LEFT JOIN test_results tr ON oi.id = tr.order_item_id
        WHERE oi.order_id = ?`,

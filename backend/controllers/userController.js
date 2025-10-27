@@ -4,13 +4,28 @@ const bcrypt = require('bcryptjs');
 // Get all users
 exports.getAllUsers = async (req, res) => {
   try {
-    const query = `
+    const { dateFrom, dateTo } = req.query;
+    
+    let query = `
       SELECT id, username, email, role, full_name, phone, is_active, created_at, updated_at 
       FROM users 
-      ORDER BY created_at DESC
+      WHERE 1=1
     `;
+    let params = [];
+
+    if (dateFrom) {
+      query += ' AND DATE(created_at) >= ?';
+      params.push(dateFrom);
+    }
+
+    if (dateTo) {
+      query += ' AND DATE(created_at) <= ?';
+      params.push(dateTo);
+    }
+
+    query += ' ORDER BY created_at DESC';
     
-    const [results] = await db.query(query);
+    const [results] = await db.query(query, params);
     res.json({ success: true, data: results });
   } catch (err) {
     console.error('Error fetching users:', err);

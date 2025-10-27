@@ -8,9 +8,18 @@ import { ApiService } from '../../services/api.service';
 })
 export class ReportsComponent implements OnInit {
   completedOrders: any[] = [];
+  filteredOrders: any[] = [];
+  paginatedOrders: any[] = [];
   loading = false;
   dateFrom: string = '';
   dateTo: string = '';
+  searchTerm = '';
+  paymentFilter = '';
+  
+  // Pagination
+  currentPage = 1;
+  itemsPerPage = 10;
+  totalPages = 0;
 
   constructor(private apiService: ApiService) { }
 
@@ -27,9 +36,20 @@ export class ReportsComponent implements OnInit {
 
   loadCompletedOrders() {
     this.loading = true;
-    this.apiService.getOrders({ status: 'completed' }).subscribe({
+    const params: any = { status: 'completed' };
+    
+    if (this.dateFrom) {
+      params.dateFrom = this.dateFrom;
+    }
+    if (this.dateTo) {
+      params.dateTo = this.dateTo;
+    }
+
+    this.apiService.getOrders(params).subscribe({
       next: (response) => {
         this.completedOrders = response.data;
+        this.filteredOrders = response.data;
+        this.applyFilters();
         this.loading = false;
       },
       error: (error) => {
@@ -40,8 +60,62 @@ export class ReportsComponent implements OnInit {
   }
 
   filterByDate() {
-    // Filter logic can be enhanced with backend support
     this.loadCompletedOrders();
+  }
+
+  applyFilters() {
+    let filtered = [...this.completedOrders];
+
+    // Filter by search term
+    if (this.searchTerm) {
+      const term = this.searchTerm.toLowerCase();
+      filtered = filtered.filter(order => 
+        order.order_number.toLowerCase().includes(term) ||
+        order.patient_name.toLowerCase().includes(term) ||
+        order.patient_code.toLowerCase().includes(term) ||
+        (order.doctor_name && order.doctor_name.toLowerCase().includes(term))
+      );
+    }
+
+    // Filter by payment status
+    if (this.paymentFilter) {
+      filtered = filtered.filter(order => order.payment_status === this.paymentFilter);
+    }
+
+    // Filter by date range
+    if (this.dateFrom) {
+      filtered = filtered.filter(order => new Date(order.created_at) >= new Date(this.dateFrom));
+    }
+    if (this.dateTo) {
+      const toDate = new Date(this.dateTo);
+      toDate.setHours(23, 59, 59, 999);
+      filtered = filtered.filter(order => new Date(order.created_at) <= toDate);
+    }
+
+    this.filteredOrders = filtered;
+    this.currentPage = 1;
+    this.updatePagination();
+  }
+
+  updatePagination() {
+    this.totalPages = Math.ceil(this.filteredOrders.length / this.itemsPerPage);
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+    this.paginatedOrders = this.filteredOrders.slice(startIndex, endIndex);
+  }
+
+  nextPage() {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+      this.updatePagination();
+    }
+  }
+
+  previousPage() {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.updatePagination();
+    }
   }
 
   printReport(order: any) {

@@ -140,8 +140,14 @@ export class ApiService {
   }
 
   // User Management
-  getUsers(): Observable<any> {
-    return this.http.get(`${environment.apiUrl}/users`);
+  getUsers(params?: any): Observable<any> {
+    let httpParams = new HttpParams();
+    if (params) {
+      Object.keys(params).forEach(key => {
+        if (params[key]) httpParams = httpParams.set(key, params[key]);
+      });
+    }
+    return this.http.get(`${environment.apiUrl}/users`, { params: httpParams });
   }
 
   getUser(id: number): Observable<any> {

@@ -1,6 +1,6 @@
 <div class="fade-in">
   <div class="page-header">
-    <h2 class="mb-0"><i class="bi bi-plus-circle me-2"></i>New Order</h2>
+    <h2 class="mb-0">New Order</h2>
   </div>
 
   <form [formGroup]="orderForm" (ngSubmit)="onSubmit()">
@@ -58,7 +58,7 @@
             <div class="mb-3">
               <input type="text" class="form-control" placeholder="Search tests..." 
                      [(ngModel)]="searchTest" [ngModelOptions]="{standalone: true}" 
-                     (keyup)="loadTests()">
+                     (input)="loadTests()">
             </div>
             <div class="row g-2">
               <div class="col-md-6" *ngFor="let test of tests">
@@ -73,7 +73,7 @@
                         <div class="fw-bold text-primary">₹{{ test.price }}</div>
                         <button type="button" class="btn btn-sm btn-outline-primary" 
                                 (click)="addTest(test)">
-                          <i class="bi bi-plus"></i>
+                          Add
                         </button>
                       </div>
                     </div>
@@ -103,7 +103,7 @@
                 <div class="text-end ms-2">
                   <div class="fw-bold">₹{{ test.price }}</div>
                   <button type="button" class="btn btn-sm btn-outline-danger" (click)="removeTest(i)">
-                    <i class="bi bi-trash"></i>
+                    Remove
                   </button>
                 </div>
               </div>
@@ -125,7 +125,6 @@
             </div>
             <button type="submit" class="btn btn-primary w-100" [disabled]="loading || selectedTests.length === 0">
               <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
-              <i *ngIf="!loading" class="bi bi-check-circle me-2"></i>
               Create Order
             </button>
             <button type="button" class="btn btn-outline-secondary w-100 mt-2" routerLink="/orders">

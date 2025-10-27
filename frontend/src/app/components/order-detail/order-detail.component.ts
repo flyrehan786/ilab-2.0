@@ -50,6 +50,10 @@ export class OrderDetailComponent implements OnInit {
       status: ['normal'],
       remarks: ['']
     });
+    
+    // Ensure forms are enabled
+    this.paymentForm.enable();
+    this.resultForm.enable();
   }
 
   loadOrder(id: number) {
@@ -177,244 +181,377 @@ export class OrderDetailComponent implements OnInit {
   }
 
   printReport() {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      alert('Please allow popups to print the report');
-      return;
-    }
-
-    const reportHtml = this.generateReportHTML();
-    printWindow.document.write(reportHtml);
-    printWindow.document.close();
+    const currentDate = new Date().toLocaleDateString('en-GB');
+    const currentTime = new Date().toLocaleTimeString('en-GB', { hour12: false });
     
-    // Wait for content to load then print
-    printWindow.onload = () => {
-      printWindow.print();
-    };
-  }
-
-  generateReportHTML(): string {
-    const currentDate = new Date().toLocaleString();
-    
-    return `
+    const printContent = `
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
   <title>Lab Report - ${this.order.order_number}</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { 
-      font-family: 'Segoe UI', Arial, sans-serif; 
-      padding: 20px;
-      color: #333;
+    body {
+      font-family: 'Courier New', monospace;
+      margin: 0;
+      padding: 15mm;
+      background: white;
+      color: #000;
+      font-size: 9pt;
+      line-height: 1.0;
     }
     .header {
-      text-align: center;
-      border-bottom: 3px solid #0d6efd;
-      padding-bottom: 20px;
-      margin-bottom: 30px;
-    }
-    .header h1 {
-      color: #0d6efd;
-      font-size: 28px;
-      margin-bottom: 5px;
-    }
-    .header p {
-      color: #666;
-      font-size: 14px;
-    }
-    .info-section {
       display: flex;
-      justify-content: space-between;
-      margin-bottom: 30px;
-      gap: 20px;
-    }
-    .info-box {
-      flex: 1;
-      background: #f8f9fa;
-      padding: 15px;
-      border-radius: 8px;
-      border-left: 4px solid #0d6efd;
-    }
-    .info-box h3 {
-      color: #0d6efd;
-      font-size: 14px;
+      align-items: flex-start;
+      border-bottom: 1px solid #000;
+      padding-bottom: 8px;
       margin-bottom: 10px;
-      text-transform: uppercase;
     }
-    .info-box p {
-      margin: 5px 0;
-      font-size: 13px;
+    .logo {
+      width: 50px;
+      height: 50px;
+      background: #e74c3c;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 18px;
+      margin-right: 12px;
+      flex-shrink: 0;
     }
-    .info-box strong {
-      display: inline-block;
-      width: 120px;
-      color: #666;
+    .header-info {
+      flex: 1;
+    }
+    .header-info h1 {
+      margin: 0 0 1px 0;
+      font-size: 12pt;
+      font-weight: bold;
+      color: #000;
+      font-family: Arial, sans-serif;
+    }
+    .header-info .subtitle {
+      font-size: 9pt;
+      margin: 0 0 2px 0;
+      color: #000;
+      font-family: Arial, sans-serif;
+    }
+    .header-info .address {
+      font-size: 7pt;
+      color: #000;
+      margin: 0;
+      line-height: 1.1;
+      font-family: Arial, sans-serif;
+    }
+    .accreditation {
+      text-align: center;
+      font-size: 8pt;
+      margin-left: 10px;
+    }
+    .accreditation-badge {
+      background: #ffd700;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 7pt;
+      margin-bottom: 2px;
+      border: none;
+    }
+    .patient-info {
+      margin: 10px 0;
+      border: 2px solid #000;
+      font-size: 8pt;
+    }
+    .patient-header {
+      background: #f0f0f0;
+      padding: 4px 10px;
+      border-bottom: 1px solid #000;
+      font-weight: bold;
+      text-align: center;
+    }
+    .patient-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+    }
+    .patient-left, .patient-right {
+      padding: 8px 10px;
+    }
+    .patient-left {
+      border-right: 1px solid #000;
+    }
+    .detail-row {
+      margin: 2px 0;
+      display: flex;
+    }
+    .detail-label {
+      width: 150px;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+    .detail-value {
+      flex: 1;
+    }
+    .section-header {
+      font-weight: bold;
+      font-size: 9pt;
+      margin: 8px 0 4px 0;
+      text-decoration: underline;
+    }
+    .specimen-info {
+      margin: 6px 0;
+      font-size: 8pt;
     }
     .results-section {
-      margin-top: 30px;
+      margin: 10px 0;
+      font-size: 8pt;
     }
-    .results-section h2 {
-      color: #0d6efd;
-      font-size: 20px;
-      margin-bottom: 20px;
-      border-bottom: 2px solid #dee2e6;
-      padding-bottom: 10px;
-    }
-    table {
+    .results-table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 30px;
+      margin: 5px 0;
     }
-    th {
-      background: #0d6efd;
-      color: white;
-      padding: 12px;
-      text-align: left;
-      font-size: 13px;
-      font-weight: 600;
+    .results-table {
+      border: 2px solid #000;
     }
-    td {
-      padding: 12px;
-      border-bottom: 1px solid #dee2e6;
-      font-size: 13px;
-    }
-    tr:hover {
-      background: #f8f9fa;
-    }
-    .status-normal { color: #198754; font-weight: bold; }
-    .status-abnormal { color: #ffc107; font-weight: bold; }
-    .status-critical { color: #dc3545; font-weight: bold; }
-    .footer {
-      margin-top: 50px;
-      padding-top: 20px;
-      border-top: 2px solid #dee2e6;
+    .results-table th {
+      border-bottom: 1px solid #000;
+      border-right: none;
+      border-left: none;
+      border-top: none;
+      padding: 4px 8px;
+      background: #f0f0f0;
+      font-weight: bold;
       text-align: center;
-      color: #666;
-      font-size: 12px;
     }
-    .signature-section {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 60px;
-      padding: 0 50px;
+    .results-table td {
+      border: none;
+      padding: 4px 8px;
+      text-align: center;
+    }
+    .results-table th:not(:last-child),
+    .results-table td:not(:last-child) {
+      border-right: 1px solid #000;
+    }
+    .test-name-col {
+      text-align: left !important;
+      font-weight: bold;
+    }
+    .test-value-col {
+      text-align: right !important;
+      font-weight: bold;
+    }
+    .abnormal {
+      color: #e74c3c;
+      font-weight: bold;
+    }
+    .abnormal {
+      color: #000;
+      font-weight: bold;
+    }
+    .comments-section {
+      margin: 8px 0;
+      font-size: 8pt;
+    }
+    .signatures {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 10px;
+      margin-top: 30px;
+      font-size: 7pt;
     }
     .signature-box {
       text-align: center;
+      border: 1px solid #000;
+      padding: 15px 5px 5px 5px;
+      min-height: 40px;
     }
     .signature-line {
-      border-top: 2px solid #333;
-      width: 200px;
-      margin-top: 50px;
-      margin-bottom: 5px;
+      border-top: 1px solid #000;
+      margin: 25px 5px 3px 5px;
     }
-    .remarks {
-      background: #fff3cd;
-      padding: 10px;
-      border-left: 4px solid #ffc107;
-      margin-top: 10px;
-      font-size: 12px;
+    .footer {
+      margin-top: 15px;
+      font-size: 7pt;
+      text-align: center;
+    }
+    .disclaimer {
+      margin-top: 8px;
+      font-size: 6pt;
+      text-align: center;
+      line-height: 1.2;
     }
     @media print {
-      body { padding: 0; }
+      body { padding: 8mm; }
       .no-print { display: none; }
     }
   </style>
 </head>
 <body>
   <div class="header">
-    <h1>🏥 iLab</h1>
-    <p style="font-size: 16px; margin-top: 10px;"><strong>Laboratory Test Report</strong></p>
-    <p>Report Generated: ${currentDate}</p>
+    <div class="logo">iL</div>
+    <div class="header-info">
+      <h1>iLab Medical Laboratory</h1>
+      <div class="subtitle">The iLab University Hospital, Karachi</div>
+      <div class="address">
+        Stadium Road, P.O. Box 3500<br>
+        Karachi - 74800, Pakistan<br>
+        Phone: +92-21-99261300 | NTN: 3506347403802/8
+      </div>
+    </div>
+    <div class="accreditation">
+      <div class="accreditation-badge">CAP</div>
+      <div>ACCREDITED</div>
+      <div style="font-size: 6pt;">College of American<br>Pathologists</div>
+    </div>
   </div>
 
-  <div class="info-section">
-    <div class="info-box">
-      <h3>Patient Information</h3>
-      <p><strong>Name:</strong> ${this.order.patient_name}</p>
-      <p><strong>Patient ID:</strong> ${this.order.patient_code}</p>
-      <p><strong>Age/Gender:</strong> ${this.order.age} Years / ${this.order.gender}</p>
-      <p><strong>Phone:</strong> ${this.order.phone}</p>
+  <div class="patient-info">
+    <div class="patient-header">Patient Information</div>
+    <div class="patient-details">
+      <div class="patient-left">
+        <div class="detail-row">
+          <span class="detail-label">Medical Record #:</span>
+          <span class="detail-value">${this.order.order_number}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Patient Name:</span>
+          <span class="detail-value">${this.order.patient_name}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Specimen ID:</span>
+          <span class="detail-value">${this.order.patient_code}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Clinical Information:</span>
+          <span class="detail-value">${this.order.notes || 'None'}</span>
+        </div>
+      </div>
+      <div class="patient-right">
+        <div class="detail-row">
+          <span class="detail-label">Age / Gender:</span>
+          <span class="detail-value">${this.order.age} / ${this.order.gender}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Location:</span>
+          <span class="detail-value">OP</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Requesting Physician:</span>
+          <span class="detail-value">${this.order.doctor_name || 'N/A'}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Received:</span>
+          <span class="detail-value">${new Date(this.order.created_at).toLocaleDateString('en-GB')}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Collected on:</span>
+          <span class="detail-value">${new Date(this.order.created_at).toLocaleDateString('en-GB')}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Reported on:</span>
+          <span class="detail-value">${currentDate}</span>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <div class="info-box">
-      <h3>Order Information</h3>
-      <p><strong>Order Number:</strong> ${this.order.order_number}</p>
-      <p><strong>Order Date:</strong> ${new Date(this.order.created_at).toLocaleString()}</p>
-      <p><strong>Status:</strong> ${this.order.status.toUpperCase()}</p>
-      <p><strong>Priority:</strong> ${this.order.priority.toUpperCase()}</p>
-    </div>
-
-    <div class="info-box">
-      <h3>Referring Doctor</h3>
-      <p><strong>Name:</strong> ${this.order.doctor_name || 'N/A'}</p>
-      <p><strong>Specialization:</strong> ${this.order.specialization || 'N/A'}</p>
-    </div>
+  <div class="specimen-info">
+    <div class="section-header">SOURCE: ${this.order.items.map((item: any) => item.sample_type || 'BLOOD').join(', ').toUpperCase()}</div>
+    <div><strong>SPECIMEN DATA:</strong> [Final Report]</div>
   </div>
 
   <div class="results-section">
-    <h2>Test Results</h2>
-    <table>
+    <div class="section-header">RESULTS: [Final Report]</div>
+    <table class="results-table">
       <thead>
         <tr>
-          <th>Test Name</th>
-          <th>Result</th>
-          <th>Unit</th>
-          <th>Normal Range</th>
-          <th>Status</th>
+          <th style="width: 40%;">Test Name</th>
+          <th style="width: 20%;">Result Value</th>
+          <th style="width: 15%;">Unit</th>
+          <th style="width: 25%;">Reference Range</th>
         </tr>
       </thead>
       <tbody>
         ${this.order.items.map((item: any) => `
           <tr>
-            <td><strong>${item.test_name}</strong></td>
-            <td>${item.result_value || item.result_text || 'Pending'}</td>
-            <td>${item.unit || '-'}</td>
-            <td>${item.normal_range || '-'}</td>
-            <td class="status-${item.result_status || 'normal'}">
-              ${(item.result_status || 'PENDING').toUpperCase()}
+            <td class="test-name-col">${item.test_name.toUpperCase()}</td>
+            <td class="test-value-col ${item.result_status === 'abnormal' ? 'abnormal' : ''}">
+              ${item.result_value || item.result_text || 'NIL'}
             </td>
+            <td>${item.unit || ''}</td>
+            <td>${item.normal_range || ''}</td>
           </tr>
-          ${item.remarks ? `
-          <tr>
-            <td colspan="5">
-              <div class="remarks">
-                <strong>Remarks:</strong> ${item.remarks}
-              </div>
-            </td>
-          </tr>
-          ` : ''}
         `).join('')}
       </tbody>
     </table>
+    
+    ${this.order.items.filter((item: any) => item.remarks).map((item: any) => `
+      <div style="margin: 5px 0; font-size: 7pt; font-style: italic;">
+        <strong>${item.test_name}:</strong> ${item.remarks}
+      </div>
+    `).join('')}
   </div>
 
   ${this.order.notes ? `
-  <div class="info-box">
-    <h3>Additional Notes</h3>
-    <p>${this.order.notes}</p>
+  <div class="comments-section">
+    <div class="section-header">COMMENTS: [Final Report]</div>
+    <div>${this.order.notes}</div>
   </div>
   ` : ''}
 
-  <div class="signature-section">
+  <div class="signatures">
     <div class="signature-box">
       <div class="signature-line"></div>
-      <p><strong>Lab Technician</strong></p>
+      <div><strong>Dr. Lab Director</strong></div>
+      <div>MBBS, FCPS(Pathology)</div>
+      <div>Professor & Chair</div>
     </div>
     <div class="signature-box">
       <div class="signature-line"></div>
-      <p><strong>Verified By</strong></p>
+      <div><strong>Dr. Senior Consultant</strong></div>
+      <div>MBBS, FCPS(Microbiology)</div>
+      <div>Associate Professor</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line"></div>
+      <div><strong>Dr. Consultant</strong></div>
+      <div>MBBS, FCPS(Hematology)</div>
+      <div>Assistant Professor</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line"></div>
+      <div><strong>Dr. Quality Control</strong></div>
+      <div>MBBS, FCPS(Microbiology)</div>
+      <div>Associate Professor</div>
     </div>
   </div>
 
   <div class="footer">
-    <p><strong>iLab - Laboratory Management System</strong></p>
-    <p>This is a computer-generated report. For any queries, please contact the laboratory.</p>
-    <p>Report ID: ${this.order.order_number} | Generated: ${currentDate}</p>
+    <div><strong>This is a computer generated report therefore does not require any signature.</strong></div>
+    <div>Printed only: ${currentDate} ${currentTime} / iLab System</div>
+  </div>
+
+  <div class="disclaimer">
+    A Unit of The iLab Hospital and Medical College Foundation • Licensed under Section 42 of the Companies Ordinance, 1984<br>
+    Registered Office: Stadium Road, P.O Box 3500, Karachi-74800 • Phone: +92-21-99261300
   </div>
 </body>
 </html>
     `;
+
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => {
+        printWindow.print();
+      }, 500);
+    }
   }
 }

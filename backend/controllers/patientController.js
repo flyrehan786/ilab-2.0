@@ -1,7 +1,7 @@
 const db = require('../config/database');
 exports.getAllPatients = async (req, res) => {
   try {
-    const { search, page = 1, limit = 10 } = req.query;
+    const { search, page = 1, limit = 10, dateFrom, dateTo } = req.query;
     const offset = (page - 1) * limit;
 
     let query = 'SELECT * FROM patients WHERE is_active = TRUE';
@@ -11,6 +11,16 @@ exports.getAllPatients = async (req, res) => {
       query += ' AND (name LIKE ? OR patient_code LIKE ? OR phone LIKE ?)';
       const searchTerm = `%${search}%`;
       params.push(searchTerm, searchTerm, searchTerm);
+    }
+
+    if (dateFrom) {
+      query += ' AND DATE(created_at) >= ?';
+      params.push(dateFrom);
+    }
+
+    if (dateTo) {
+      query += ' AND DATE(created_at) <= ?';
+      params.push(dateTo);
     }
 
     query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';

@@ -1,13 +1,21 @@
 <div class="fade-in">
   <div class="page-header d-flex justify-content-between align-items-center">
-    <h2 class="mb-0"><i class="bi bi-person-badge me-2"></i>Doctors</h2>
+    <h2 class="mb-0">Doctors</h2>
     <button class="btn btn-primary" (click)="openModal()">
-      <i class="bi bi-plus-circle me-2"></i>Add Doctor
+      Add Doctor
     </button>
   </div>
 
   <div class="card">
     <div class="card-body">
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Search</label>
+          <input type="text" class="form-control" placeholder="Search by name, specialization, phone..." 
+                 [(ngModel)]="searchTerm" (keyup)="applyFilters()">
+        </div>
+      </div>
+
       <div *ngIf="loading" class="text-center py-5">
         <div class="spinner-border text-primary"></div>
       </div>
@@ -25,7 +33,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let doctor of doctors">
+            <tr *ngFor="let doctor of paginatedDoctors">
               <td><strong>{{ doctor.name }}</strong></td>
               <td>{{ doctor.specialization || 'N/A' }}</td>
               <td>{{ doctor.phone }}</td>
@@ -33,18 +41,31 @@
               <td>{{ doctor.license_number || 'N/A' }}</td>
               <td>
                 <button class="btn btn-sm btn-outline-primary me-1" (click)="openModal(doctor)">
-                  <i class="bi bi-pencil"></i>
+                  Edit
                 </button>
                 <button class="btn btn-sm btn-outline-danger" (click)="deleteDoctor(doctor.id)">
-                  <i class="bi bi-trash"></i>
+                  Delete
                 </button>
               </td>
             </tr>
-            <tr *ngIf="doctors.length === 0">
+            <tr *ngIf="filteredDoctors.length === 0">
               <td colspan="6" class="text-center text-muted py-4">No doctors found</td>
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="d-flex justify-content-between align-items-center mt-3" *ngIf="filteredDoctors.length > 0">
+        <button class="btn btn-outline-secondary" (click)="previousPage()" [disabled]="currentPage === 1">
+          Previous
+        </button>
+        <span class="text-muted">
+          Page {{ currentPage }} of {{ totalPages }}
+        </span>
+        <button class="btn btn-outline-secondary" (click)="nextPage()" [disabled]="currentPage === totalPages">
+          Next
+        </button>
       </div>
     </div>
   </div>

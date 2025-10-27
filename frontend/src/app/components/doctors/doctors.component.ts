@@ -11,7 +11,15 @@ declare var bootstrap: any;
 })
 export class DoctorsComponent implements OnInit {
   doctors: any[] = [];
+  filteredDoctors: any[] = [];
+  paginatedDoctors: any[] = [];
   loading = false;
+  searchTerm = '';
+  
+  // Pagination
+  currentPage = 1;
+  itemsPerPage = 10;
+  totalPages = 0;
   doctorForm!: FormGroup;
   editMode = false;
   selectedDoctorId: number | null = null;
@@ -33,6 +41,9 @@ export class DoctorsComponent implements OnInit {
       address: [''],
       license_number: ['']
     });
+    
+    // Ensure form is enabled
+    this.doctorForm.enable();
   }
 
   loadDoctors() {
@@ -40,6 +51,7 @@ export class DoctorsComponent implements OnInit {
     this.apiService.getDoctors().subscribe({
       next: (data) => {
         this.doctors = data;
+        this.filteredDoctors = data;
         this.loading = false;
       },
       error: (error) => {
@@ -47,6 +59,45 @@ export class DoctorsComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  applyFilters() {
+    let filtered = [...this.doctors];
+
+    if (this.searchTerm) {
+      const term = this.searchTerm.toLowerCase();
+      filtered = filtered.filter(doctor => 
+        doctor.name.toLowerCase().includes(term) ||
+        (doctor.specialization && doctor.specialization.toLowerCase().includes(term)) ||
+        (doctor.phone && doctor.phone.includes(term)) ||
+        (doctor.email && doctor.email.toLowerCase().includes(term))
+      );
+    }
+
+    this.filteredDoctors = filtered;
+    this.currentPage = 1;
+    this.updatePagination();
+  }
+
+  updatePagination() {
+    this.totalPages = Math.ceil(this.filteredDoctors.length / this.itemsPerPage);
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+    this.paginatedDoctors = this.filteredDoctors.slice(startIndex, endIndex);
+  }
+
+  nextPage() {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+      this.updatePagination();
+    }
+  }
+
+  previousPage() {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.updatePagination();
+    }
   }
 
   openModal(doctor?: any) {

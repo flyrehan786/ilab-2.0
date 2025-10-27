@@ -17,6 +17,13 @@ export class UsersComponent implements OnInit {
   editMode = false;
   selectedUserId: number | null = null;
   searchTerm = '';
+  dateFrom = '';
+  dateTo = '';
+  
+  // Pagination
+  currentPage = 1;
+  itemsPerPage = 10;
+  totalPages = 0;
 
   roles = [
     { value: 'admin', label: 'Administrator' },
@@ -45,11 +52,23 @@ export class UsersComponent implements OnInit {
       phone: [''],
       is_active: [true]
     });
+    
+    // Ensure form is enabled
+    this.userForm.enable();
   }
 
   loadUsers() {
     this.loading = true;
-    this.apiService.getUsers().subscribe({
+    const params: any = {};
+    
+    if (this.dateFrom) {
+      params.dateFrom = this.dateFrom;
+    }
+    if (this.dateTo) {
+      params.dateTo = this.dateTo;
+    }
+
+    this.apiService.getUsers(params).subscribe({
       next: (response) => {
         this.users = response.data;
         this.loading = false;
@@ -201,15 +220,58 @@ export class UsersComponent implements OnInit {
   }
 
   get filteredUsers() {
-    if (!this.searchTerm) {
-      return this.users;
+    let filtered = this.users;
+    
+    // Filter by search term
+    if (this.searchTerm) {
+      const term = this.searchTerm.toLowerCase();
+      filtered = filtered.filter(user =>
+        user.username.toLowerCase().includes(term) ||
+        user.email.toLowerCase().includes(term) ||
+        user.full_name.toLowerCase().includes(term) ||
+        user.role.toLowerCase().includes(term)
+      );
     }
-    const term = this.searchTerm.toLowerCase();
-    return this.users.filter(user =>
-      user.username.toLowerCase().includes(term) ||
-      user.email.toLowerCase().includes(term) ||
-      user.full_name.toLowerCase().includes(term) ||
-      user.role.toLowerCase().includes(term)
-    );
+
+    // Filter by date range
+    if (this.dateFrom) {
+      filtered = filtered.filter(user => new Date(user.created_at) >= new Date(this.dateFrom));
+    }
+    if (this.dateTo) {
+      const toDate = new Date(this.dateTo);
+      toDate.setHours(23, 59, 59, 999);
+      filtered = filtered.filter(user => new Date(user.created_at) <= toDate);
+    }
+
+    return filtered;
+  }
+
+  get paginatedUsers() {
+    const filtered = this.filteredUsers;
+    this.totalPages = Math.ceil(filtered.length / this.itemsPerPage);
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+    return filtered.slice(startIndex, endIndex);
+  }
+
+  onSearchChange() {
+    this.currentPage = 1;
+  }
+
+  onFilterChange() {
+    this.currentPage = 1;
+    this.loadUsers();
+  }
+
+  nextPage() {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+    }
+  }
+
+  previousPage() {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+    }
   }
 }

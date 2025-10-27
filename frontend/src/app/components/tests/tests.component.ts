@@ -11,8 +11,17 @@ declare var bootstrap: any;
 })
 export class TestsComponent implements OnInit {
   tests: any[] = [];
+  filteredTests: any[] = [];
+  paginatedTests: any[] = [];
   categories: any[] = [];
   loading = false;
+  searchTerm = '';
+  categoryFilter = '';
+  
+  // Pagination
+  currentPage = 1;
+  itemsPerPage = 10;
+  totalPages = 0;
   testForm!: FormGroup;
   editMode = false;
   selectedTestId: number | null = null;
@@ -38,6 +47,9 @@ export class TestsComponent implements OnInit {
       preparation_instructions: [''],
       turnaround_time: ['']
     });
+    
+    // Ensure form is enabled
+    this.testForm.enable();
   }
 
   loadTests() {
@@ -45,6 +57,7 @@ export class TestsComponent implements OnInit {
     this.apiService.getTests().subscribe({
       next: (data) => {
         this.tests = data;
+        this.filteredTests = data;
         this.loading = false;
       },
       error: (error) => {
@@ -52,6 +65,48 @@ export class TestsComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  applyFilters() {
+    let filtered = [...this.tests];
+
+    if (this.searchTerm) {
+      const term = this.searchTerm.toLowerCase();
+      filtered = filtered.filter(test => 
+        test.name.toLowerCase().includes(term) ||
+        test.test_code.toLowerCase().includes(term) ||
+        (test.sample_type && test.sample_type.toLowerCase().includes(term))
+      );
+    }
+
+    if (this.categoryFilter) {
+      filtered = filtered.filter(test => test.category_id == this.categoryFilter);
+    }
+
+    this.filteredTests = filtered;
+    this.currentPage = 1;
+    this.updatePagination();
+  }
+
+  updatePagination() {
+    this.totalPages = Math.ceil(this.filteredTests.length / this.itemsPerPage);
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+    this.paginatedTests = this.filteredTests.slice(startIndex, endIndex);
+  }
+
+  nextPage() {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+      this.updatePagination();
+    }
+  }
+
+  previousPage() {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.updatePagination();
+    }
   }
 
   loadCategories() {

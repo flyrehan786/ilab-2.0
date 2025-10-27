@@ -1,23 +1,47 @@
 <div class="fade-in">
   <div class="page-header d-flex justify-content-between align-items-center">
-    <h2 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Orders</h2>
+    <h2 class="mb-0">Orders</h2>
     <button class="btn btn-primary" routerLink="/orders/new">
-      <i class="bi bi-plus-circle me-2"></i>New Order
+      New Order
     </button>
   </div>
 
   <div class="card">
     <div class="card-body">
-      <div class="row mb-3">
-        <div class="col-md-4">
+      <div class="row mb-3 g-3">
+        <div class="col-md-3">
+          <label class="form-label">Search</label>
+          <input type="text" class="form-control" placeholder="Search by order #, patient, doctor..." 
+                 [(ngModel)]="searchTerm" (keyup)="onFilterChange()">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">From Date</label>
+          <input type="date" class="form-control" [(ngModel)]="dateFrom" (change)="onFilterChange()">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">To Date</label>
+          <input type="date" class="form-control" [(ngModel)]="dateTo" (change)="onFilterChange()">
+        </div>
+        <div class="col-md-3">
           <label class="form-label">Filter by Status</label>
           <select class="form-select" [(ngModel)]="statusFilter" (change)="onFilterChange()">
-            <option value="">All Orders</option>
+            <option value="">All Status</option>
             <option value="pending">Pending</option>
             <option value="sample_collected">Sample Collected</option>
             <option value="in_progress">In Progress</option>
             <option value="completed">Completed</option>
             <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+      </div>
+      <div class="row mb-3 g-3">
+        <div class="col-md-3">
+          <label class="form-label">Filter by Payment</label>
+          <select class="form-select" [(ngModel)]="paymentFilter" (change)="onFilterChange()">
+            <option value="">All Payment Status</option>
+            <option value="unpaid">Unpaid</option>
+            <option value="partial">Partial</option>
+            <option value="paid">Paid</option>
           </select>
         </div>
       </div>
@@ -41,7 +65,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let order of orders">
+            <tr *ngFor="let order of paginatedOrders">
               <td><strong>{{ order.order_number }}</strong></td>
               <td>
                 <div>{{ order.patient_name }}</div>
@@ -62,15 +86,28 @@
               </td>
               <td>
                 <button class="btn btn-sm btn-outline-primary" [routerLink]="['/orders', order.id]">
-                  <i class="bi bi-eye"></i> View
+                  View
                 </button>
               </td>
             </tr>
-            <tr *ngIf="orders.length === 0">
+            <tr *ngIf="filteredOrders.length === 0">
               <td colspan="8" class="text-center text-muted py-4">No orders found</td>
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="d-flex justify-content-between align-items-center mt-3" *ngIf="filteredOrders.length > 0">
+        <button class="btn btn-outline-secondary" (click)="previousPage()" [disabled]="currentPage === 1">
+          Previous
+        </button>
+        <span class="text-muted">
+          Page {{ currentPage }} of {{ totalPages }}
+        </span>
+        <button class="btn btn-outline-secondary" (click)="nextPage()" [disabled]="currentPage === totalPages">
+          Next
+        </button>
       </div>
     </div>
   </div>

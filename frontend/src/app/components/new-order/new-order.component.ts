@@ -39,6 +39,9 @@ export class NewOrderComponent implements OnInit {
       notes: [''],
       discount: [0]
     });
+    
+    // Ensure form is enabled
+    this.orderForm.enable();
   }
 
   loadPatients() {

@@ -12,6 +12,7 @@ exports.login = async (req, res) => {
     );
 
     if (users.length === 0) {
+      console.log('user length is 0');
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
@@ -19,6 +20,7 @@ exports.login = async (req, res) => {
     const isValidPassword = await bcrypt.compare(password, user.password);
 
     if (!isValidPassword) {
+      console.log('password is not valid');
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
