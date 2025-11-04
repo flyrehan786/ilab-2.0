@@ -20,6 +20,16 @@ exports.getDashboardStats = async (req, res) => {
       'SELECT SUM(amount) as revenue FROM payments WHERE DATE(payment_date) = CURDATE()'
     );
 
+    // Total received payments
+    const [totalReceivedPayments] = await db.query(
+      'SELECT SUM(paid_amount) as total FROM patient_test_orders WHERE paid_amount > 0'
+    );
+
+    // Total unpaid payments (total_amount - paid_amount for all orders)
+    const [totalUnpaidPayments] = await db.query(
+      'SELECT SUM(total_amount - paid_amount) as total FROM patient_test_orders WHERE (total_amount - paid_amount) > 0'
+    );
+
     // Recent orders
     const [recentOrders] = await db.query(
       `SELECT o.id, o.order_number, o.status, o.created_at, 
@@ -62,7 +72,9 @@ exports.getDashboardStats = async (req, res) => {
         totalPatients: patientCount[0].count,
         todayOrders: todayOrders[0].count,
         pendingOrders: pendingOrders[0].count,
-        todayRevenue: todayRevenue[0].revenue || 0
+        todayRevenue: todayRevenue[0].revenue || 0,
+        totalReceivedPayments: totalReceivedPayments[0].total || 0,
+        totalUnpaidPayments: totalUnpaidPayments[0].total || 0
       },
       recentOrders,
       ordersByStatus,
