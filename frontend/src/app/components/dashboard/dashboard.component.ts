@@ -114,7 +114,7 @@ export class DashboardComponent implements OnInit {
         beginAtZero: true,
         ticks: {
           callback: function(value) {
-            return '₹' + value;
+            return value;
           }
         }
       }
