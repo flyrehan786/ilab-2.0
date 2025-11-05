@@ -56,28 +56,34 @@
           </div>
           <div class="card-body">
             <div class="mb-3">
-              <input type="text" class="form-control" placeholder="Search tests..." 
-                     [(ngModel)]="searchTest" [ngModelOptions]="{standalone: true}" 
-                     (input)="loadTests()">
+              <div class="input-group">
+                <span class="input-group-text bg-white">
+                  <i class="bi bi-search"></i>
+                </span>
+                <input type="text" class="form-control" placeholder="Search tests by name or code..." 
+                       [(ngModel)]="searchTest" [ngModelOptions]="{standalone: true}" 
+                       (input)="loadTests()">
+              </div>
             </div>
-            <div class="row g-2">
-              <div class="col-md-6" *ngFor="let test of tests">
-                <div class="card border">
-                  <div class="card-body p-2">
-                    <div class="d-flex justify-content-between align-items-center">
-                      <div>
-                        <strong>{{ test.name }}</strong>
-                        <div class="small text-muted">{{ test.test_code }}</div>
-                      </div>
-                      <div class="text-end">
-                        <div class="fw-bold text-primary">₹{{ test.price }}</div>
-                        <button type="button" class="btn btn-sm btn-outline-primary" 
-                                (click)="addTest(test)">
-                          Add
-                        </button>
-                      </div>
+            <div class="test-list" style="max-height: 500px; overflow-y: auto;">
+              <div class="list-group">
+                <div class="list-group-item list-group-item-action" *ngFor="let test of tests">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div class="flex-grow-1">
+                      <h6 class="mb-1">{{ test.name }}</h6>
+                      <small class="text-muted">{{ test.test_code }}</small>
+                    </div>
+                    <div class="text-end ms-3">
+                      <div class="fw-bold text-primary mb-2">₹{{ test.price }}</div>
+                      <button type="button" class="btn btn-sm btn-primary" 
+                              (click)="addTest(test)">
+                        Add
+                      </button>
                     </div>
                   </div>
+                </div>
+                <div *ngIf="tests.length === 0" class="text-center text-muted py-4">
+                  No tests found
                 </div>
               </div>
             </div>
@@ -90,21 +96,24 @@
           <div class="card-header bg-primary text-white">
             <h5 class="mb-0">Selected Tests</h5>
           </div>
-          <div class="card-body">
+          <div class="card-body" style="max-height: 400px; overflow-y: auto;">
             <div *ngIf="selectedTests.length === 0" class="text-center text-muted py-4">
-              No tests selected
+              <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+              <p class="mt-2 mb-0">No tests selected</p>
             </div>
-            <div *ngFor="let test of selectedTests; let i = index" class="mb-2 pb-2 border-bottom">
-              <div class="d-flex justify-content-between align-items-start">
-                <div class="flex-grow-1">
-                  <div class="fw-bold">{{ test.name }}</div>
-                  <div class="small text-muted">{{ test.test_code }}</div>
-                </div>
-                <div class="text-end ms-2">
-                  <div class="fw-bold">₹{{ test.price }}</div>
-                  <button type="button" class="btn btn-sm btn-outline-danger" (click)="removeTest(i)">
-                    Remove
-                  </button>
+            <div class="list-group">
+              <div class="list-group-item border-0 px-0" *ngFor="let test of selectedTests; let i = index">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div class="flex-grow-1 me-2">
+                    <h6 class="mb-1">{{ test.name }}</h6>
+                    <small class="text-muted">{{ test.test_code }}</small>
+                  </div>
+                  <div class="text-end">
+                    <div class="fw-bold text-success mb-2">₹{{ test.price }}</div>
+                    <button type="button" class="btn btn-sm btn-outline-danger" (click)="removeTest(i)">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
