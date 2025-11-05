@@ -8,21 +8,21 @@
 
   <div class="card">
     <div class="card-body">
-      <div class="row mb-3 g-3">
-        <div class="col-md-3">
+      <div class="row mb-3 g-2">
+        <div class="col">
           <label class="form-label">Search</label>
           <input type="text" class="form-control" placeholder="Search by name, code, phone..." 
                  [(ngModel)]="searchTerm" (keyup)="onSearch()">
         </div>
-        <div class="col-md-3">
+        <div class="col">
           <label class="form-label">From Date</label>
           <input type="date" class="form-control" [(ngModel)]="dateFrom" (change)="onSearch()">
         </div>
-        <div class="col-md-3">
+        <div class="col">
           <label class="form-label">To Date</label>
           <input type="date" class="form-control" [(ngModel)]="dateTo" (change)="onSearch()">
         </div>
-        <div class="col-md-3">
+        <div class="col">
           <label class="form-label">Filter by Gender</label>
           <select class="form-select" [(ngModel)]="genderFilter" (change)="onSearch()">
             <option value="">All Genders</option>
@@ -31,9 +31,7 @@
             <option value="Other">Other</option>
           </select>
         </div>
-      </div>
-      <div class="row mb-3 g-3">
-        <div class="col-md-3">
+        <div class="col">
           <label class="form-label">Filter by Blood Group</label>
           <select class="form-select" [(ngModel)]="bloodGroupFilter" (change)="onSearch()">
             <option value="">All Blood Groups</option>

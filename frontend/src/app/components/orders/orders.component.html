@@ -8,21 +8,21 @@
 
   <div class="card">
     <div class="card-body">
-      <div class="row mb-3 g-3">
-        <div class="col-md-3">
+      <div class="row mb-3 g-2">
+        <div class="col">
           <label class="form-label">Search</label>
           <input type="text" class="form-control" placeholder="Search by order #, patient, doctor..." 
                  [(ngModel)]="searchTerm" (keyup)="onFilterChange()">
         </div>
-        <div class="col-md-3">
+        <div class="col">
           <label class="form-label">From Date</label>
           <input type="date" class="form-control" [(ngModel)]="dateFrom" (change)="onFilterChange()">
         </div>
-        <div class="col-md-3">
+        <div class="col">
           <label class="form-label">To Date</label>
           <input type="date" class="form-control" [(ngModel)]="dateTo" (change)="onFilterChange()">
         </div>
-        <div class="col-md-3">
+        <div class="col">
           <label class="form-label">Filter by Status</label>
           <select class="form-select" [(ngModel)]="statusFilter" (change)="onFilterChange()">
             <option value="">All Status</option>
@@ -33,9 +33,7 @@
             <option value="cancelled">Cancelled</option>
           </select>
         </div>
-      </div>
-      <div class="row mb-3 g-3">
-        <div class="col-md-3">
+        <div class="col">
           <label class="form-label">Filter by Payment</label>
           <select class="form-select" [(ngModel)]="paymentFilter" (change)="onFilterChange()">
             <option value="">All Payment Status</option>

@@ -5,6 +5,15 @@ exports.getDashboardStats = async (req, res) => {
     // Total patients
     const [patientCount] = await db.query('SELECT COUNT(*) as count FROM patients WHERE is_active = TRUE');
 
+    // Total doctors
+    const [doctorCount] = await db.query('SELECT COUNT(*) as count FROM doctors WHERE is_active = TRUE');
+
+    // Total orders
+    const [totalOrdersCount] = await db.query('SELECT COUNT(*) as count FROM patient_test_orders');
+
+    // Total users
+    const [userCount] = await db.query('SELECT COUNT(*) as count FROM users WHERE is_active = TRUE');
+
     // Total orders today
     const [todayOrders] = await db.query(
       'SELECT COUNT(*) as count FROM patient_test_orders WHERE DATE(created_at) = CURDATE()'
@@ -70,6 +79,9 @@ exports.getDashboardStats = async (req, res) => {
     res.json({
       stats: {
         totalPatients: patientCount[0].count,
+        totalDoctors: doctorCount[0].count,
+        totalOrders: totalOrdersCount[0].count,
+        totalUsers: userCount[0].count,
         todayOrders: todayOrders[0].count,
         pendingOrders: pendingOrders[0].count,
         todayRevenue: todayRevenue[0].revenue || 0,
