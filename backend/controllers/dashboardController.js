@@ -2,6 +2,9 @@ const db = require('../config/database');
 
 exports.getDashboardStats = async (req, res) => {
   try {
+    // Get date range parameters for top tests
+    const { dateRange, startDate, endDate } = req.query;
+    
     // Total patients
     const [patientCount] = await db.query('SELECT COUNT(*) as count FROM patients WHERE is_active = TRUE');
 
@@ -65,16 +68,35 @@ exports.getDashboardStats = async (req, res) => {
        ORDER BY month ASC`
     );
 
-    // Top tests
-    const [topTests] = await db.query(
-      `SELECT t.name, COUNT(*) as count
+    // Top tests with dynamic date range
+    let topTestsQuery = `SELECT t.name, COUNT(*) as count
        FROM patient_test_order_items oi
        JOIN tests t ON oi.test_id = t.id
-       WHERE oi.created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+       WHERE `;
+    
+    let dateCondition = '';
+    const queryParams = [];
+    
+    if (dateRange === 'custom' && startDate && endDate) {
+      dateCondition = 'oi.created_at >= ? AND oi.created_at <= ?';
+      queryParams.push(startDate, endDate);
+    } else if (dateRange === '7') {
+      dateCondition = 'oi.created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)';
+    } else if (dateRange === '14') {
+      dateCondition = 'oi.created_at >= DATE_SUB(CURDATE(), INTERVAL 14 DAY)';
+    } else if (dateRange === '30') {
+      dateCondition = 'oi.created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)';
+    } else {
+      // Default to 30 days
+      dateCondition = 'oi.created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)';
+    }
+    
+    topTestsQuery += dateCondition + `
        GROUP BY t.id, t.name
        ORDER BY count DESC
-       LIMIT 5`
-    );
+       LIMIT 5`;
+    
+    const [topTests] = await db.query(topTestsQuery, queryParams);
 
     res.json({
       stats: {

@@ -10,8 +10,14 @@ export class ApiService {
   constructor(private http: HttpClient) { }
 
   // Dashboard
-  getDashboardStats(): Observable<any> {
-    return this.http.get(`${environment.apiUrl}/dashboard/stats`);
+  getDashboardStats(params?: any): Observable<any> {
+    let httpParams = new HttpParams();
+    if (params) {
+      Object.keys(params).forEach(key => {
+        if (params[key]) httpParams = httpParams.set(key, params[key]);
+      });
+    }
+    return this.http.get(`${environment.apiUrl}/dashboard/stats`, { params: httpParams });
   }
 
   // Patients
