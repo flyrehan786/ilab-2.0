@@ -1,7 +1,9 @@
 const db = require('../config/database');
+const emailService = require('../services/emailService');
 
 exports.getAllOrders = async (req, res) => {
   try {
+    console.log('alllllllllllll')
     const { status, patient_id, page = 1, limit = 10, dateFrom, dateTo } = req.query;
     const offset = (page - 1) * limit;
 
@@ -144,10 +146,30 @@ exports.createOrder = async (req, res) => {
 };
 
 exports.updateOrderStatus = async (req, res) => {
+  console.log('update-order-status');
   try {
     const { status } = req.body;
-
+    console.log('status = ' + status);
     await db.query('UPDATE patient_test_orders SET status = ? WHERE id = ?', [status, req.params.id]);
+
+    if (status.toUpperCase() === 'COMPLETED') {
+      console.log('called----------------');
+      // Fetch order details for email
+      const [orderDetails] = await db.query(
+        `SELECT o.order_number, p.email, p.name as patient_name
+         FROM patient_test_orders o
+         JOIN patients p ON o.patient_id = p.id
+         WHERE o.id = ?`,
+        [req.params.id]
+      );
+
+      if (orderDetails.length > 0) {
+        const order = orderDetails[0];
+        const reportUrl = `${process.env.FRONTEND_URL}/orders/${req.params.id}`;
+        await emailService.sendReportEmail(order.email, order.patient_name, order.order_number, reportUrl);
+      }
+    }
+    console.log('outside of if statement.');
 
     res.json({ message: 'Order status updated successfully' });
   } catch (error) {
