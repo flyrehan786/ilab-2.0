@@ -2,7 +2,18 @@ const db = require('../config/database');
 
 exports.getAllPatientsForDropdown = async (req, res) => {
   try {
-    const [patients] = await db.query('SELECT id, name, patient_code FROM patients WHERE is_active = TRUE AND lab_id = ? ORDER BY name ASC', [req.lab_id]);
+    const labId = req.query.lab_id || req.lab_id;
+    let query = 'SELECT id, name, patient_code FROM patients WHERE is_active = TRUE';
+    const params = [];
+
+    if (labId) {
+      query += ' AND lab_id = ?';
+      params.push(labId);
+    }
+
+    query += ' ORDER BY name ASC';
+
+    const [patients] = await db.query(query, params);
     res.json(patients);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -12,35 +23,36 @@ exports.getAllPatientsForDropdown = async (req, res) => {
 exports.getAllPatients = async (req, res) => {
   try {
     const { search, page = 1, limit = 10, dateFrom, dateTo } = req.query;
+    const labId = req.query.lab_id || req.lab_id;
     const offset = (page - 1) * limit;
 
-    let query = 'SELECT * FROM patients WHERE is_active = TRUE AND lab_id = ?';
-    let params = [req.lab_id];
+    let whereClause = 'WHERE p.is_active = TRUE';
+    let params = [];
+
+    if (labId && labId !== '') {
+      whereClause += ' AND p.lab_id = ?';
+      params.push(labId);
+    }
 
     if (search) {
-      query += ' AND (name LIKE ? OR patient_code LIKE ? OR phone LIKE ?)';
+      whereClause += ' AND (p.name LIKE ? OR p.patient_code LIKE ? OR p.phone LIKE ?)';
       const searchTerm = `%${search}%`;
       params.push(searchTerm, searchTerm, searchTerm);
     }
-
     if (dateFrom) {
-      query += ' AND DATE(created_at) >= ?';
+      whereClause += ' AND DATE(p.created_at) >= ?';
       params.push(dateFrom);
     }
-
     if (dateTo) {
-      query += ' AND DATE(created_at) <= ?';
+      whereClause += ' AND DATE(p.created_at) <= ?';
       params.push(dateTo);
     }
 
-    query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
-    params.push(parseInt(limit), parseInt(offset));
+    const dataQuery = `SELECT p.*, l.name as lab_name FROM patients p JOIN labs l ON p.lab_id = l.id ${whereClause} ORDER BY p.created_at DESC LIMIT ? OFFSET ?`;
+    const [patients] = await db.query(dataQuery, [...params, parseInt(limit), parseInt(offset)]);
 
-    const [patients] = await db.query(query, params);
-
-    const [countResult] = await db.query(
-      'SELECT COUNT(*) as total FROM patients WHERE is_active = TRUE AND lab_id = ?', [req.lab_id]
-    );
+    const countQuery = `SELECT COUNT(*) as total FROM patients p ${whereClause}`;
+    const [countResult] = await db.query(countQuery, params);
 
     res.json({
       data: patients,
@@ -55,7 +67,16 @@ exports.getAllPatients = async (req, res) => {
 
 exports.getPatientById = async (req, res) => {
   try {
-    const [patients] = await db.query('SELECT * FROM patients WHERE id = ? AND lab_id = ?', [req.params.id, req.lab_id]);
+    const labId = req.lab_id;
+    let query = 'SELECT * FROM patients WHERE id = ?';
+    const params = [req.params.id];
+
+    if (labId) {
+      query += ' AND lab_id = ?';
+      params.push(labId);
+    }
+
+    const [patients] = await db.query(query, params);
 
     if (patients.length === 0) {
       return res.status(404).json({ error: 'Patient not found' });
@@ -70,21 +91,24 @@ exports.getPatientById = async (req, res) => {
 exports.createPatient = async (req, res) => {
   try {
     const { name, date_of_birth, age, gender, phone, email, address, blood_group, emergency_contact, medical_history } = req.body;
-    const lab_id = req.lab_id;
+    const lab_id = req.body.lab_id || req.lab_id;
+
+    if (!lab_id) {
+      return res.status(400).json({ error: 'Lab ID is required' });
+    }
 
     // Generate patient code
     const [lastPatient] = await db.query('SELECT patient_code FROM patients WHERE lab_id = ? ORDER BY id DESC LIMIT 1', [lab_id]);
     let patientCode = 'PAT0001';
-    if (lastPatient && lastPatient.length > 0 && lastPatient[0].patient_code) {
-        try {
-            const lastCode = parseInt(lastPatient[0].patient_code.replace('PAT', ''));
-            if (!isNaN(lastCode)) {
-                patientCode = 'PAT' + String(lastCode + 1).padStart(4, '0');
-            }
-        } catch (e) {
-            // Fallback in case of parsing error
-            console.error('Error parsing patient code:', e);
+    if (lastPatient.length > 0 && lastPatient[0].patient_code) {
+      try {
+        const lastCode = parseInt(lastPatient[0].patient_code.replace('PAT', ''));
+        if (!isNaN(lastCode)) {
+          patientCode = 'PAT' + String(lastCode + 1).padStart(4, '0');
         }
+      } catch (e) {
+        console.error('Error parsing patient code:', e);
+      }
     }
 
     const [result] = await db.query(
@@ -102,13 +126,22 @@ exports.createPatient = async (req, res) => {
 exports.updatePatient = async (req, res) => {
   try {
     const { name, date_of_birth, age, gender, phone, email, address, blood_group, emergency_contact, medical_history } = req.body;
-    const lab_id = req.lab_id;
+    const labId = req.lab_id;
 
-    await db.query(
-      `UPDATE patients SET name = ?, date_of_birth = ?, age = ?, gender = ?, phone = ?, email = ?, 
-       address = ?, blood_group = ?, emergency_contact = ?, medical_history = ? WHERE id = ? AND lab_id = ?`,
-      [name, date_of_birth, age, gender, phone, email, address, blood_group, emergency_contact, medical_history, req.params.id, lab_id]
-    );
+    let query = `UPDATE patients SET name = ?, date_of_birth = ?, age = ?, gender = ?, phone = ?, email = ?, 
+                 address = ?, blood_group = ?, emergency_contact = ?, medical_history = ? WHERE id = ?`;
+    const params = [name, date_of_birth, age, gender, phone, email, address, blood_group, emergency_contact, medical_history, req.params.id];
+
+    if (labId) {
+      query += ' AND lab_id = ?';
+      params.push(labId);
+    }
+
+    const [result] = await db.query(query, params);
+
+    if (result.affectedRows === 0) {
+        return res.status(404).json({ error: 'Patient not found or you do not have permission to update it.' });
+    }
 
     res.json({ message: 'Patient updated successfully' });
   } catch (error) {
@@ -118,7 +151,21 @@ exports.updatePatient = async (req, res) => {
 
 exports.deletePatient = async (req, res) => {
   try {
-    await db.query('UPDATE patients SET is_active = FALSE WHERE id = ? AND lab_id = ?', [req.params.id, req.lab_id]);
+    const labId = req.lab_id;
+    let query = 'UPDATE patients SET is_active = FALSE WHERE id = ?';
+    const params = [req.params.id];
+
+    if (labId) {
+      query += ' AND lab_id = ?';
+      params.push(labId);
+    }
+
+    const [result] = await db.query(query, params);
+
+    if (result.affectedRows === 0) {
+        return res.status(404).json({ error: 'Patient not found or you do not have permission to delete it.' });
+    }
+
     res.json({ message: 'Patient deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });

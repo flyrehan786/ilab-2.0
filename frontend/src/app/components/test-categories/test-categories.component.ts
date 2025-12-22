@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
+import { AuthService } from '../../services/auth.service';
 
 declare var bootstrap: any;
 
@@ -22,7 +23,7 @@ export class TestCategoriesComponent implements OnInit {
   selectedCategoryId: number | null = null;
   modal: any;
 
-  constructor(private apiService: ApiService, private formBuilder: FormBuilder) { }
+  constructor(private apiService: ApiService, private formBuilder: FormBuilder, private authService: AuthService) { }
 
   ngOnInit() {
     this.initForm();
@@ -37,11 +38,18 @@ export class TestCategoriesComponent implements OnInit {
 
   loadCategories() {
     this.loading = true;
-    const params = {
+    const params: any = {
       page: this.currentPage,
       limit: this.itemsPerPage,
       search: this.searchTerm
     };
+
+    if (this.authService.isSuperAdmin()) {
+      const selectedLabId = localStorage.getItem('selectedLabId');
+      if (selectedLabId) {
+        params.lab_id = selectedLabId;
+      }
+    }
     this.apiService.getTestCategories(params).subscribe({
       next: (response) => {
         console.log('Categories data received:', response);
@@ -93,6 +101,15 @@ export class TestCategoriesComponent implements OnInit {
       return;
     }
     const data = this.categoryForm.value;
+
+    if (this.authService.isSuperAdmin() && !this.editMode) {
+      const selectedLabId = localStorage.getItem('selectedLabId');
+      if (!selectedLabId) {
+        alert('Please select a lab from the filter before creating a category.');
+        return;
+      }
+      data.lab_id = selectedLabId;
+    }
     if (this.editMode && this.selectedCategoryId) {
       this.apiService.updateTestCategory(this.selectedCategoryId, data).subscribe(() => {
         this.modal.hide();

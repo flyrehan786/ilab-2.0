@@ -12,6 +12,7 @@ const orderController = require('../controllers/orderController');
 const resultController = require('../controllers/resultController');
 const dashboardController = require('../controllers/dashboardController');
 const userController = require('../controllers/userController');
+const labController = require('../controllers/labController');
 
 // Auth routes
 router.post('/auth/register-lab', authController.registerLab);
@@ -70,6 +71,9 @@ router.get('/users/:id', auth, authorize('admin'), userController.getUserById);
 router.post('/users', auth, authorize('admin'), userController.createUser);
 router.put('/users/:id', auth, authorize('admin'), userController.updateUser);
 router.delete('/users/:id', auth, authorize('admin'), userController.deleteUser);
+
+// Lab routes
+router.get('/labs', auth, authorize('super'), labController.getAllLabs);
 router.delete('/users/:id/permanent', auth, authorize('admin'), userController.permanentDeleteUser);
 router.patch('/users/:id/toggle-status', auth, authorize('admin'), userController.toggleUserStatus);
 router.post('/users/:id/change-password', auth, userController.changePassword);

@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
+import { AuthService } from '../../services/auth.service';
 
 declare var bootstrap: any;
 
@@ -26,7 +27,7 @@ export class TestsComponent implements OnInit {
   selectedTestId: number | null = null;
   modal: any;
 
-  constructor(private apiService: ApiService, private formBuilder: FormBuilder) { }
+  constructor(private apiService: ApiService, private formBuilder: FormBuilder, private authService: AuthService) { }
 
   ngOnInit() {
     this.initForm();
@@ -53,12 +54,19 @@ export class TestsComponent implements OnInit {
 
   loadTests() {
     this.loading = true;
-    const params = {
+    const params: any = {
       page: this.currentPage,
       limit: this.itemsPerPage,
       search: this.searchTerm,
       category_id: this.categoryFilter
     };
+
+    if (this.authService.isSuperAdmin()) {
+      const selectedLabId = localStorage.getItem('selectedLabId');
+      if (selectedLabId) {
+        params.lab_id = selectedLabId;
+      }
+    }
 
     this.apiService.getTests(params).subscribe({
       next: (response) => {
@@ -94,7 +102,14 @@ export class TestsComponent implements OnInit {
   }
 
   loadCategories() {
-    this.apiService.getTestCategoriesForDropdown().subscribe({
+    const params: any = {};
+    if (this.authService.isSuperAdmin()) {
+      const selectedLabId = localStorage.getItem('selectedLabId');
+      if (selectedLabId) {
+        params.lab_id = selectedLabId;
+      }
+    }
+    this.apiService.getTestCategoriesForDropdown(params).subscribe({
       next: (data) => this.categories = data,
       error: (error) => console.error('Error:', error)
     });
@@ -120,6 +135,16 @@ export class TestsComponent implements OnInit {
     
     const data = this.testForm.value;
     this.loading = true;
+
+    if (this.authService.isSuperAdmin() && !this.editMode) {
+      const selectedLabId = localStorage.getItem('selectedLabId');
+      if (!selectedLabId) {
+        alert('Please select a lab from the filter before creating a test.');
+        this.loading = false;
+        return;
+      }
+      data.lab_id = selectedLabId;
+    }
     
     if (this.editMode && this.selectedTestId) {
       this.apiService.updateTest(this.selectedTestId, data).subscribe({

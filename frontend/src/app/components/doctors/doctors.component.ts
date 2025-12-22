@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
+import { AuthService } from '../../services/auth.service';
 
 declare var bootstrap: any;
 
@@ -24,7 +25,7 @@ export class DoctorsComponent implements OnInit {
   selectedDoctorId: number | null = null;
   modal: any;
 
-  constructor(private apiService: ApiService, private formBuilder: FormBuilder) { }
+  constructor(private apiService: ApiService, private formBuilder: FormBuilder, private authService: AuthService) { }
 
   ngOnInit() {
     this.initForm();
@@ -47,11 +48,18 @@ export class DoctorsComponent implements OnInit {
 
   loadDoctors() {
     this.loading = true;
-    const params = {
+    const params: any = {
       page: this.currentPage,
       limit: this.itemsPerPage,
       search: this.searchTerm
     };
+
+    if (this.authService.isSuperAdmin()) {
+      const selectedLabId = localStorage.getItem('selectedLabId');
+      if (selectedLabId) {
+        params.lab_id = selectedLabId;
+      }
+    }
 
     this.apiService.getDoctors(params).subscribe({
       next: (response) => {
@@ -106,6 +114,16 @@ export class DoctorsComponent implements OnInit {
     
     const data = this.doctorForm.value;
     this.loading = true;
+
+    if (this.authService.isSuperAdmin() && !this.editMode) {
+      const selectedLabId = localStorage.getItem('selectedLabId');
+      if (!selectedLabId) {
+        alert('Please select a lab from the filter before creating a doctor.');
+        this.loading = false;
+        return;
+      }
+      data.lab_id = selectedLabId;
+    }
     
     if (this.editMode && this.selectedDoctorId) {
       this.apiService.updateDoctor(this.selectedDoctorId, data).subscribe({

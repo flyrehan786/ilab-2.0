@@ -5,45 +5,39 @@ const bcrypt = require('bcryptjs');
 exports.getAllUsers = async (req, res) => {
   try {
     const { dateFrom, dateTo, page = 1, limit = 10, search } = req.query;
+    const labId = req.query.lab_id || req.lab_id;
     const offset = (page - 1) * limit;
 
-    let dataQuery = 'SELECT id, username, email, role, full_name, phone, is_active, created_at, updated_at FROM users WHERE lab_id = ?';
-    let countQuery = 'SELECT COUNT(*) as total FROM users WHERE lab_id = ?';
-    let params = [req.lab_id];
+    let whereClause = 'WHERE 1=1';
+    let params = [];
+
+    if (labId) {
+      whereClause += ' AND lab_id = ?';
+      params.push(labId);
+    }
 
     if (search) {
-      const searchTerm = `%${search}%`;
-      const searchQuery = ' AND (username LIKE ? OR email LIKE ? OR full_name LIKE ?)';
-      dataQuery += searchQuery;
-      countQuery += searchQuery;
-      params.push(searchTerm, searchTerm, searchTerm);
+      whereClause += ' AND (username LIKE ? OR email LIKE ? OR full_name LIKE ?)';
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`);
     }
-
     if (dateFrom) {
-      const dateQuery = ' AND DATE(created_at) >= ?';
-      dataQuery += dateQuery;
-      countQuery += dateQuery;
+      whereClause += ' AND DATE(created_at) >= ?';
       params.push(dateFrom);
     }
-
     if (dateTo) {
-      const dateQuery = ' AND DATE(created_at) <= ?';
-      dataQuery += dateQuery;
-      countQuery += dateQuery;
+      whereClause += ' AND DATE(created_at) <= ?';
       params.push(dateTo);
     }
 
+    const countQuery = `SELECT COUNT(*) as total FROM users ${whereClause}`;
     const [countResult] = await db.query(countQuery, params);
-    const total = countResult[0].total;
 
-    dataQuery += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
-    const queryParams = [...params, parseInt(limit), parseInt(offset)];
-
-    const [users] = await db.query(dataQuery, queryParams);
+    const dataQuery = `SELECT id, username, email, role, full_name, phone, is_active, created_at, updated_at FROM users ${whereClause} ORDER BY created_at DESC LIMIT ? OFFSET ?`;
+    const [users] = await db.query(dataQuery, [...params, parseInt(limit), parseInt(offset)]);
 
     res.json({
       data: users,
-      total,
+      total: countResult[0].total,
       page: parseInt(page),
       limit: parseInt(limit)
     });
@@ -57,19 +51,22 @@ exports.getAllUsers = async (req, res) => {
 exports.getUserById = async (req, res) => {
   try {
     const { id } = req.params;
-    
-    const query = `
-      SELECT id, username, email, role, full_name, phone, is_active, created_at, updated_at 
-      FROM users 
-      WHERE id = ? AND lab_id = ?
-    `;
-    
-    const [results] = await db.query(query, [id, req.lab_id]);
-    
+    const labId = req.lab_id;
+
+    let query = `SELECT id, username, email, role, full_name, phone, is_active, created_at, updated_at FROM users WHERE id = ?`;
+    const params = [id];
+
+    if (labId) {
+      query += ' AND lab_id = ?';
+      params.push(labId);
+    }
+
+    const [results] = await db.query(query, params);
+
     if (results.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
-    
+
     res.json({ success: true, data: results[0] });
   } catch (err) {
     console.error('Error fetching user:', err);
@@ -80,7 +77,11 @@ exports.getUserById = async (req, res) => {
 // Create new user
 exports.createUser = async (req, res) => {
   const { username, email, password, role, full_name, phone } = req.body;
-  const lab_id = req.lab_id;
+  const lab_id = req.body.lab_id || req.lab_id;
+
+  if (req.user.role === 'super' && !req.body.lab_id) {
+    return res.status(400).json({ error: 'Lab ID is required for super admin' });
+  }
   
   // Validation
   if (!username || !email || !password || !role || !full_name) {
@@ -160,10 +161,19 @@ exports.updateUser = async (req, res) => {
       params = [username, email, role, full_name, phone || null, is_active ? 1 : 0, id, lab_id];
     }
     
-    const [result] = await db.query(updateQuery, params);
-    
+    let whereClause = ' WHERE id = ?';
+    let queryParams = [...params, id];
+
+    if (lab_id) {
+      whereClause += ' AND lab_id = ?';
+      queryParams.push(lab_id);
+    }
+
+    const finalQuery = updateQuery.replace('WHERE id = ? AND lab_id = ?', whereClause);
+    const [result] = await db.query(finalQuery, queryParams);
+
     if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: 'User not found or permission denied' });
     }
     
     res.json({ 
@@ -180,21 +190,28 @@ exports.updateUser = async (req, res) => {
 exports.deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
-    
-    // Prevent deleting the default admin user
+    const labId = req.lab_id;
+
     if (id === '1') {
       return res.status(400).json({ error: 'Cannot delete the default admin user' });
     }
-    
-    const query = 'UPDATE users SET is_active = 0 WHERE id = ? AND lab_id = ?';
-    const [result] = await db.query(query, [id, req.lab_id]);
-    
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'User not found' });
+
+    let query = 'UPDATE users SET is_active = 0 WHERE id = ?';
+    const params = [id];
+
+    if (labId) {
+      query += ' AND lab_id = ?';
+      params.push(labId);
     }
-    
-    res.json({ 
-      success: true, 
+
+    const [result] = await db.query(query, params);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'User not found or permission denied' });
+    }
+
+    res.json({
+      success: true,
       message: 'User deactivated successfully'
     });
   } catch (err) {

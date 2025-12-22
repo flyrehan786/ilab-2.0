@@ -4,59 +4,46 @@ const emailService = require('../services/emailService');
 exports.getAllOrders = async (req, res) => {
   try {
     const { status, payment_status, search, page = 1, limit = 10, dateFrom, dateTo } = req.query;
+    const labId = req.query.lab_id || req.lab_id;
     const offset = (page - 1) * limit;
 
-    let dataQuery = `SELECT o.*, p.name as patient_name, p.patient_code, d.name as doctor_name
-                     FROM patient_test_orders o
+    let baseQuery = `FROM patient_test_orders o
                      LEFT JOIN patients p ON o.patient_id = p.id
-                     LEFT JOIN doctors d ON o.doctor_id = d.id
-                     WHERE o.lab_id = ?`;
-    let countQuery = `SELECT COUNT(*) as total
-                      FROM patient_test_orders o
-                      LEFT JOIN patients p ON o.patient_id = p.id
-                      LEFT JOIN doctors d ON o.doctor_id = d.id
-                      WHERE o.lab_id = ?`;
+                     LEFT JOIN doctors d ON o.doctor_id = d.id`;
+    let whereClause = ' WHERE 1=1';
+    let params = [];
 
-    let params = [req.lab_id];
+    if (labId) {
+      whereClause += ' AND o.lab_id = ?';
+      params.push(labId);
+    }
 
     if (status) {
-      dataQuery += ' AND o.status = ?';
-      countQuery += ' AND o.status = ?';
+      whereClause += ' AND o.status = ?';
       params.push(status);
     }
-
     if (payment_status) {
-      dataQuery += ' AND o.payment_status = ?';
-      countQuery += ' AND o.payment_status = ?';
+      whereClause += ' AND o.payment_status = ?';
       params.push(payment_status);
     }
-
     if (search) {
+      whereClause += ' AND (o.order_number LIKE ? OR p.name LIKE ? OR p.patient_code LIKE ? OR d.name LIKE ?)';
       const searchTerm = `%${search}%`;
-      const searchQuery = ' AND (o.order_number LIKE ? OR p.name LIKE ? OR p.patient_code LIKE ? OR d.name LIKE ?)';
-      dataQuery += searchQuery;
-      countQuery += searchQuery;
       params.push(searchTerm, searchTerm, searchTerm, searchTerm);
     }
-
     if (dateFrom) {
-      const dateFilter = ' AND DATE(o.created_at) >= ?';
-      dataQuery += dateFilter;
-      countQuery += dateFilter;
+      whereClause += ' AND DATE(o.created_at) >= ?';
       params.push(dateFrom);
     }
-
     if (dateTo) {
-      const dateFilter = ' AND DATE(o.created_at) <= ?';
-      dataQuery += dateFilter;
-      countQuery += dateFilter;
+      whereClause += ' AND DATE(o.created_at) <= ?';
       params.push(dateTo);
     }
 
-    const [countResult] = await db.query(countQuery, params);
+    const [countResult] = await db.query(`SELECT COUNT(*) as total ${baseQuery} ${whereClause}`, params);
     const total = countResult[0].total;
 
-    dataQuery += ' ORDER BY o.created_at DESC LIMIT ? OFFSET ?';
+    const dataQuery = `SELECT o.*, p.name as patient_name, p.patient_code, d.name as doctor_name ${baseQuery} ${whereClause} ORDER BY o.created_at DESC LIMIT ? OFFSET ?`;
     params.push(parseInt(limit), parseInt(offset));
 
     const [orders] = await db.query(dataQuery, params);
@@ -74,17 +61,23 @@ exports.getAllOrders = async (req, res) => {
 
 exports.getOrderById = async (req, res) => {
   try {
-    const [orders] = await db.query(
-      `SELECT o.*, p.name as patient_name, p.patient_code, p.age, p.gender, p.phone,
-              d.name as doctor_name, d.specialization,
-              u.full_name as created_by_name
-       FROM patient_test_orders o
-       LEFT JOIN patients p ON o.patient_id = p.id
-       LEFT JOIN doctors d ON o.doctor_id = d.id
-       LEFT JOIN users u ON o.created_by = u.id
-       WHERE o.id = ? AND o.lab_id = ?`,
-      [req.params.id, req.lab_id]
-    );
+    const labId = req.lab_id;
+    let query = `SELECT o.*, p.name as patient_name, p.patient_code, p.age, p.gender, p.phone,
+                     d.name as doctor_name, d.specialization,
+                     u.full_name as created_by_name
+              FROM patient_test_orders o
+              LEFT JOIN patients p ON o.patient_id = p.id
+              LEFT JOIN doctors d ON o.doctor_id = d.id
+              LEFT JOIN users u ON o.created_by = u.id
+              WHERE o.id = ?`;
+    const params = [req.params.id];
+
+    if (labId) {
+      query += ' AND o.lab_id = ?';
+      params.push(labId);
+    }
+
+    const [orders] = await db.query(query, params);
 
     if (orders.length === 0) {
       return res.status(404).json({ error: 'Order not found' });
@@ -122,7 +115,11 @@ exports.createOrder = async (req, res) => {
     await connection.beginTransaction();
     console.log('begin-transaction');
     const { patient_id, doctor_id, priority, notes, tests, discount = 0 } = req.body;
-    const lab_id = req.lab_id;
+    const lab_id = req.body.lab_id || req.lab_id;
+
+    if (!lab_id) {
+      return res.status(400).json({ error: 'Lab ID is required' });
+    }
     console.log(req.body);
 
     // Generate order number
@@ -171,18 +168,36 @@ exports.updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
     console.log('status = ' + status);
-    await db.query('UPDATE patient_test_orders SET status = ? WHERE id = ? AND lab_id = ?', [status, req.params.id, req.lab_id]);
+    const labId = req.lab_id;
+    let query = 'UPDATE patient_test_orders SET status = ? WHERE id = ?';
+    const params = [status, req.params.id];
+
+    if (labId) {
+      query += ' AND lab_id = ?';
+      params.push(labId);
+    }
+
+    const [result] = await db.query(query, params);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Order not found or you do not have permission to update it.' });
+    }
 
     if (status.toUpperCase() === 'COMPLETED') {
       console.log('called----------------');
       // Fetch order details for email
-      const [orderDetails] = await db.query(
-        `SELECT o.order_number, p.email, p.name as patient_name
-         FROM patient_test_orders o
-         JOIN patients p ON o.patient_id = p.id
-         WHERE o.id = ? AND o.lab_id = ?`,
-        [req.params.id, req.lab_id]
-      );
+      let orderDetailsQuery = `SELECT o.order_number, p.email, p.name as patient_name
+                               FROM patient_test_orders o
+                               JOIN patients p ON o.patient_id = p.id
+                               WHERE o.id = ?`;
+      const orderDetailsParams = [req.params.id];
+
+      if (labId) {
+        orderDetailsQuery += ' AND o.lab_id = ?';
+        orderDetailsParams.push(labId);
+      }
+
+      const [orderDetails] = await db.query(orderDetailsQuery, orderDetailsParams);
 
       if (orderDetails.length > 0) {
         const order = orderDetails[0];
@@ -212,10 +227,19 @@ exports.addPayment = async (req, res) => {
     );
 
     // Update order payment status
-    const [order] = await connection.query(
-      'SELECT total_amount, discount, paid_amount FROM patient_test_orders WHERE id = ? AND lab_id = ?',
-      [order_id, req.lab_id]
-    );
+    let orderQuery = 'SELECT total_amount, discount, paid_amount FROM patient_test_orders WHERE id = ?';
+    const orderParams = [order_id];
+
+    if (req.lab_id) {
+      orderQuery += ' AND lab_id = ?';
+      orderParams.push(req.lab_id);
+    }
+
+    const [order] = await connection.query(orderQuery, orderParams);
+
+    if (order.length === 0) {
+      return res.status(404).json({ error: 'Order not found or you do not have permission to access it.' });
+    }
 
     const newPaidAmount = parseFloat(order[0].paid_amount) + parseFloat(amount);
     const finalAmount = parseFloat(order[0].total_amount) - parseFloat(order[0].discount);

@@ -10,6 +10,11 @@ export class ApiService {
   constructor(private http: HttpClient) { }
 
   // Dashboard
+  // Labs
+  getAllLabs(): Observable<any> {
+    return this.http.get(`${environment.apiUrl}/labs`);
+  }
+
   getDashboardStats(params?: any): Observable<any> {
     let httpParams = new HttpParams();
     if (params) {
@@ -97,8 +102,14 @@ export class ApiService {
     return this.http.get(`${environment.apiUrl}/tests/${id}`);
   }
 
-  getTestCategoriesForDropdown(): Observable<any> {
-    return this.http.get(`${environment.apiUrl}/test-categories/all`);
+  getTestCategoriesForDropdown(params?: any): Observable<any> {
+    let httpParams = new HttpParams();
+    if (params) {
+      Object.keys(params).forEach(key => {
+        if (params[key]) httpParams = httpParams.set(key, params[key]);
+      });
+    }
+    return this.http.get(`${environment.apiUrl}/test-categories/all`, { params: httpParams });
   }
 
   getTestCategories(params?: any): Observable<any> {

@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ApiService } from '../../services/api.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-orders',
@@ -21,7 +22,7 @@ export class OrdersComponent implements OnInit {
   totalItems = 0;
   totalPages = 0;
 
-  constructor(private apiService: ApiService) { }
+  constructor(private apiService: ApiService, private authService: AuthService) { }
 
   ngOnInit() {
     this.loadOrders();
@@ -38,6 +39,13 @@ export class OrdersComponent implements OnInit {
       dateFrom: this.dateFrom,
       dateTo: this.dateTo
     };
+
+    if (this.authService.isSuperAdmin()) {
+      const selectedLabId = localStorage.getItem('selectedLabId');
+      if (selectedLabId) {
+        params.lab_id = selectedLabId;
+      }
+    }
 
     this.apiService.getOrders(params).subscribe({
       next: (response) => {

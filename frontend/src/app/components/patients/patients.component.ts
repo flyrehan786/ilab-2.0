@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
+import { AuthService } from '../../services/auth.service';
 
 declare var bootstrap: any;
 
@@ -28,7 +29,8 @@ export class PatientsComponent implements OnInit {
 
   constructor(
     private apiService: ApiService,
-    private formBuilder: FormBuilder
+    private formBuilder: FormBuilder,
+    private authService: AuthService
   ) { }
 
   ngOnInit() {
@@ -63,6 +65,13 @@ export class PatientsComponent implements OnInit {
       dateFrom: this.dateFrom,
       dateTo: this.dateTo
     };
+
+    if (this.authService.isSuperAdmin()) {
+      const selectedLabId = localStorage.getItem('selectedLabId');
+      if (selectedLabId) {
+        params.lab_id = selectedLabId;
+      }
+    }
 
     this.apiService.getPatients(params).subscribe({
       next: (response) => {
@@ -119,6 +128,16 @@ export class PatientsComponent implements OnInit {
 
     const data = this.patientForm.value;
     this.loading = true;
+
+    if (this.authService.isSuperAdmin() && !this.editMode) {
+      const selectedLabId = localStorage.getItem('selectedLabId');
+      if (!selectedLabId) {
+        alert('Please select a lab from the filter before creating a patient.');
+        this.loading = false;
+        return;
+      }
+      data.lab_id = selectedLabId;
+    }
 
     if (this.editMode && this.selectedPatientId) {
       this.apiService.updatePatient(this.selectedPatientId, data).subscribe({

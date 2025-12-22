@@ -67,4 +67,9 @@ export class AuthService {
   getLabId(): string | null {
     return localStorage.getItem('lab_id');
   }
+
+  isSuperAdmin(): boolean {
+    const currentUser = this.currentUserValue;
+    return currentUser && currentUser.user && currentUser.user.role === 'super' && !currentUser.user.lab_id;
+  }
 }

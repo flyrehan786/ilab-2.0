@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ApiService } from '../../services/api.service';
+import { AuthService } from '../../services/auth.service';
 import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
 
 @Component({
@@ -126,7 +127,7 @@ export class DashboardComponent implements OnInit {
     }
   };
 
-  constructor(private apiService: ApiService) { }
+  constructor(private apiService: ApiService, private authService: AuthService) { }
 
   ngOnInit() {
     this.loadDashboardData();
@@ -140,6 +141,13 @@ export class DashboardComponent implements OnInit {
       status: this.selectedStatus,
       date: this.selectedDate
     };
+
+    if (this.authService.isSuperAdmin()) {
+      const selectedLabId = localStorage.getItem('selectedLabId');
+      if (selectedLabId) {
+        params.lab_id = selectedLabId;
+      }
+    }
 
     if (this.testDateRange === 'custom' && this.testStartDate && this.testEndDate) {
       params.startDate = this.testStartDate;

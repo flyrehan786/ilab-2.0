@@ -50,6 +50,14 @@
           </a>
         </li>
       </ul>
+      <div *ngIf="authService.isSuperAdmin()" class="d-flex align-items-center me-3">
+        <label for="labFilter" class="form-label me-2 mb-0">Lab:</label>
+        <select id="labFilter" class="form-select form-select-sm" [(ngModel)]="selectedLabId" (change)="onLabChange()">
+          <option value="">All Labs</option>
+          <option *ngFor="let lab of labs" [value]="lab.id">{{ lab.name }}</option>
+        </select>
+      </div>
+
       <ul class="navbar-nav">
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
