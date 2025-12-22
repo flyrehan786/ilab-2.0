@@ -25,7 +25,7 @@ exports.login = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.id, username: user.username, role: user.role },
+      { id: user.id, username: user.username, role: user.role, lab_id: user.lab_id },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRE }
     );
@@ -47,13 +47,13 @@ exports.login = async (req, res) => {
 
 exports.register = async (req, res) => {
   try {
-    const { username, email, password, role, full_name, phone } = req.body;
+    const { username, email, password, role, full_name, phone, lab_id } = req.body;
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const [result] = await db.query(
-      'INSERT INTO users (username, email, password, role, full_name, phone) VALUES (?, ?, ?, ?, ?, ?)',
-      [username, email, hashedPassword, role, full_name, phone]
+      'INSERT INTO users (username, email, password, role, full_name, phone, lab_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [username, email, hashedPassword, role, full_name, phone, lab_id]
     );
 
     res.status(201).json({ message: 'User created successfully', id: result.insertId });

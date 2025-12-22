@@ -9,9 +9,9 @@ exports.getAllUsers = async (req, res) => {
     let query = `
       SELECT id, username, email, role, full_name, phone, is_active, created_at, updated_at 
       FROM users 
-      WHERE 1=1
+      WHERE lab_id = ?
     `;
-    let params = [];
+    let params = [req.lab_id];
 
     if (dateFrom) {
       query += ' AND DATE(created_at) >= ?';
@@ -41,10 +41,10 @@ exports.getUserById = async (req, res) => {
     const query = `
       SELECT id, username, email, role, full_name, phone, is_active, created_at, updated_at 
       FROM users 
-      WHERE id = ?
+      WHERE id = ? AND lab_id = ?
     `;
     
-    const [results] = await db.query(query, [id]);
+    const [results] = await db.query(query, [id, req.lab_id]);
     
     if (results.length === 0) {
       return res.status(404).json({ error: 'User not found' });
@@ -60,6 +60,7 @@ exports.getUserById = async (req, res) => {
 // Create new user
 exports.createUser = async (req, res) => {
   const { username, email, password, role, full_name, phone } = req.body;
+  const lab_id = req.lab_id;
   
   // Validation
   if (!username || !email || !password || !role || !full_name) {
@@ -80,11 +81,11 @@ exports.createUser = async (req, res) => {
     
     // Insert user
     const insertQuery = `
-      INSERT INTO users (username, email, password, role, full_name, phone, is_active) 
-      VALUES (?, ?, ?, ?, ?, ?, 1)
+      INSERT INTO users (username, email, password, role, full_name, phone, is_active, lab_id) 
+      VALUES (?, ?, ?, ?, ?, ?, 1, ?)
     `;
     
-    const [result] = await db.query(insertQuery, [username, email, hashedPassword, role, full_name, phone || null]);
+    const [result] = await db.query(insertQuery, [username, email, hashedPassword, role, full_name, phone || null, lab_id]);
     
     res.status(201).json({ 
       success: true, 
@@ -101,6 +102,7 @@ exports.createUser = async (req, res) => {
 exports.updateUser = async (req, res) => {
   const { id } = req.params;
   const { username, email, password, role, full_name, phone, is_active } = req.body;
+  const lab_id = req.lab_id;
   
   // Validation
   if (!username || !email || !role || !full_name) {
@@ -125,17 +127,17 @@ exports.updateUser = async (req, res) => {
       updateQuery = `
         UPDATE users 
         SET username = ?, email = ?, password = ?, role = ?, full_name = ?, phone = ?, is_active = ?
-        WHERE id = ?
+        WHERE id = ? AND lab_id = ?
       `;
-      params = [username, email, hashedPassword, role, full_name, phone || null, is_active ? 1 : 0, id];
+      params = [username, email, hashedPassword, role, full_name, phone || null, is_active ? 1 : 0, id, lab_id];
     } else {
       // Update without changing password
       updateQuery = `
         UPDATE users 
         SET username = ?, email = ?, role = ?, full_name = ?, phone = ?, is_active = ?
-        WHERE id = ?
+        WHERE id = ? AND lab_id = ?
       `;
-      params = [username, email, role, full_name, phone || null, is_active ? 1 : 0, id];
+      params = [username, email, role, full_name, phone || null, is_active ? 1 : 0, id, lab_id];
     }
     
     const [result] = await db.query(updateQuery, params);
@@ -164,8 +166,8 @@ exports.deleteUser = async (req, res) => {
       return res.status(400).json({ error: 'Cannot delete the default admin user' });
     }
     
-    const query = 'UPDATE users SET is_active = 0 WHERE id = ?';
-    const [result] = await db.query(query, [id]);
+    const query = 'UPDATE users SET is_active = 0 WHERE id = ? AND lab_id = ?';
+    const [result] = await db.query(query, [id, req.lab_id]);
     
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'User not found' });
@@ -191,8 +193,8 @@ exports.permanentDeleteUser = async (req, res) => {
       return res.status(400).json({ error: 'Cannot delete the default admin user' });
     }
     
-    const query = 'DELETE FROM users WHERE id = ?';
-    const [result] = await db.query(query, [id]);
+    const query = 'DELETE FROM users WHERE id = ? AND lab_id = ?';
+    const [result] = await db.query(query, [id, req.lab_id]);
     
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'User not found' });
@@ -218,8 +220,8 @@ exports.toggleUserStatus = async (req, res) => {
       return res.status(400).json({ error: 'Cannot deactivate the default admin user' });
     }
     
-    const query = 'UPDATE users SET is_active = NOT is_active WHERE id = ?';
-    const [result] = await db.query(query, [id]);
+    const query = 'UPDATE users SET is_active = NOT is_active WHERE id = ? AND lab_id = ?';
+    const [result] = await db.query(query, [id, req.lab_id]);
     
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'User not found' });
@@ -246,8 +248,8 @@ exports.changePassword = async (req, res) => {
   
   try {
     // Get current password hash
-    const query = 'SELECT password FROM users WHERE id = ?';
-    const [results] = await db.query(query, [id]);
+    const query = 'SELECT password FROM users WHERE id = ? AND lab_id = ?';
+    const [results] = await db.query(query, [id, req.lab_id]);
     
     if (results.length === 0) {
       return res.status(404).json({ error: 'User not found' });

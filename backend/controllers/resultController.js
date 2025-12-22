@@ -4,9 +4,9 @@ exports.addResult = async (req, res) => {
   try {
     const { order_item_id, result_value, result_text, normal_range, unit, status, remarks } = req.body;
     const [result] = await db.query(
-      `INSERT INTO test_results (order_item_id, result_value, result_text, normal_range, unit, status, remarks, tested_by, tested_at) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-      [order_item_id, result_value, result_text, normal_range, unit, status, remarks, 1]
+      `INSERT INTO test_results (order_item_id, result_value, result_text, normal_range, unit, status, remarks, tested_by, tested_at, lab_id) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)`,
+      [order_item_id, result_value, result_text, normal_range, unit, status, remarks, req.user.id, req.lab_id]
     );
 
     // Update order item status
@@ -26,9 +26,9 @@ exports.addResult = async (req, res) => {
     );
 
     if (allItems[0].total === allItems[0].completed) {
-      await db.query('UPDATE patient_test_orders SET status = ? WHERE id = ?', ['completed', orderId]);
+      await db.query('UPDATE patient_test_orders SET status = ? WHERE id = ? AND lab_id = ?', ['completed', orderId, req.lab_id]);
     } else {
-      await db.query('UPDATE patient_test_orders SET status = ? WHERE id = ?', ['in_progress', orderId]);
+      await db.query('UPDATE patient_test_orders SET status = ? WHERE id = ? AND lab_id = ?', ['in_progress', orderId, req.lab_id]);
     }
 
     res.status(201).json({ message: 'Result added successfully', id: result.insertId });
@@ -43,8 +43,8 @@ exports.updateResult = async (req, res) => {
 
     await db.query(
       `UPDATE test_results SET result_value = ?, result_text = ?, normal_range = ?, unit = ?, status = ?, remarks = ? 
-       WHERE id = ?`,
-      [result_value, result_text, normal_range, unit, status, remarks, req.params.id]
+       WHERE id = ? AND lab_id = ?`,
+      [result_value, result_text, normal_range, unit, status, remarks, req.params.id, req.lab_id]
     );
 
     res.json({ message: 'Result updated successfully' });
@@ -56,8 +56,8 @@ exports.updateResult = async (req, res) => {
 exports.verifyResult = async (req, res) => {
   try {
     await db.query(
-      'UPDATE test_results SET verified_by = ?, verified_at = NOW() WHERE id = ?',
-      [req.user.id, req.params.id]
+      'UPDATE test_results SET verified_by = ?, verified_at = NOW() WHERE id = ? AND lab_id = ?',
+      [req.user.id, req.params.id, req.lab_id]
     );
 
     res.json({ message: 'Result verified successfully' });
@@ -75,8 +75,8 @@ exports.getResultsByOrder = async (req, res) => {
        JOIN patient_test_order_items oi ON tr.order_item_id = oi.id
        LEFT JOIN users u1 ON tr.tested_by = u1.id
        LEFT JOIN users u2 ON tr.verified_by = u2.id
-       WHERE oi.order_id = ?`,
-      [req.params.orderId]
+       WHERE oi.order_id = ? AND tr.lab_id = ?`,
+      [req.params.orderId, req.lab_id]
     );
 
     res.json(results);

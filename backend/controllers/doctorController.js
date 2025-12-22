@@ -3,8 +3,8 @@ exports.getAllDoctors = async (req, res) => {
   try {
     const { search } = req.query;
 
-    let query = 'SELECT * FROM doctors WHERE is_active = TRUE';
-    let params = [];
+    let query = 'SELECT * FROM doctors WHERE is_active = TRUE AND lab_id = ?';
+    let params = [req.lab_id];
 
     if (search) {
       query += ' AND (name LIKE ? OR specialization LIKE ?)';
@@ -22,7 +22,7 @@ exports.getAllDoctors = async (req, res) => {
 };
 exports.getDoctorById = async (req, res) => {
   try {
-    const [doctors] = await db.query('SELECT * FROM doctors WHERE id = ?', [req.params.id]);
+    const [doctors] = await db.query('SELECT * FROM doctors WHERE id = ? AND lab_id = ?', [req.params.id, req.lab_id]);
 
     if (doctors.length === 0) {
       return res.status(404).json({ error: 'Doctor not found' });
@@ -36,10 +36,11 @@ exports.getDoctorById = async (req, res) => {
 exports.createDoctor = async (req, res) => {
   try {
     const { name, specialization, phone, email, address, license_number } = req.body;
+    const lab_id = req.lab_id;
 
     const [result] = await db.query(
-      'INSERT INTO doctors (name, specialization, phone, email, address, license_number) VALUES (?, ?, ?, ?, ?, ?)',
-      [name, specialization, phone, email, address, license_number]
+      'INSERT INTO doctors (name, specialization, phone, email, address, license_number, lab_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [name, specialization, phone, email, address, license_number, lab_id]
     );
 
     res.status(201).json({ message: 'Doctor created successfully', id: result.insertId });
@@ -52,8 +53,8 @@ exports.updateDoctor = async (req, res) => {
     const { name, specialization, phone, email, address, license_number } = req.body;
 
     await db.query(
-      'UPDATE doctors SET name = ?, specialization = ?, phone = ?, email = ?, address = ?, license_number = ? WHERE id = ?',
-      [name, specialization, phone, email, address, license_number, req.params.id]
+      'UPDATE doctors SET name = ?, specialization = ?, phone = ?, email = ?, address = ?, license_number = ? WHERE id = ? AND lab_id = ?',
+      [name, specialization, phone, email, address, license_number, req.params.id, req.lab_id]
     );
 
     res.json({ message: 'Doctor updated successfully' });
@@ -63,7 +64,7 @@ exports.updateDoctor = async (req, res) => {
 };
 exports.deleteDoctor = async (req, res) => {
   try {
-    await db.query('UPDATE doctors SET is_active = FALSE WHERE id = ?', [req.params.id]);
+    await db.query('UPDATE doctors SET is_active = FALSE WHERE id = ? AND lab_id = ?', [req.params.id, req.lab_id]);
     res.json({ message: 'Doctor deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });

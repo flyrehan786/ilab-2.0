@@ -1,11 +1,12 @@
 const db = require('../config/database');
+
 exports.getAllPatients = async (req, res) => {
   try {
     const { search, page = 1, limit = 10, dateFrom, dateTo } = req.query;
     const offset = (page - 1) * limit;
 
-    let query = 'SELECT * FROM patients WHERE is_active = TRUE';
-    let params = [];
+    let query = 'SELECT * FROM patients WHERE is_active = TRUE AND lab_id = ?';
+    let params = [req.lab_id];
 
     if (search) {
       query += ' AND (name LIKE ? OR patient_code LIKE ? OR phone LIKE ?)';
@@ -29,7 +30,7 @@ exports.getAllPatients = async (req, res) => {
     const [patients] = await db.query(query, params);
 
     const [countResult] = await db.query(
-      'SELECT COUNT(*) as total FROM patients WHERE is_active = TRUE'
+      'SELECT COUNT(*) as total FROM patients WHERE is_active = TRUE AND lab_id = ?', [req.lab_id]
     );
 
     res.json({
@@ -42,9 +43,10 @@ exports.getAllPatients = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 exports.getPatientById = async (req, res) => {
   try {
-    const [patients] = await db.query('SELECT * FROM patients WHERE id = ?', [req.params.id]);
+    const [patients] = await db.query('SELECT * FROM patients WHERE id = ? AND lab_id = ?', [req.params.id, req.lab_id]);
 
     if (patients.length === 0) {
       return res.status(404).json({ error: 'Patient not found' });
@@ -55,12 +57,14 @@ exports.getPatientById = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 exports.createPatient = async (req, res) => {
   try {
     const { name, date_of_birth, age, gender, phone, email, address, blood_group, emergency_contact, medical_history } = req.body;
+    const lab_id = req.lab_id;
 
     // Generate patient code
-    const [lastPatient] = await db.query('SELECT patient_code FROM patients ORDER BY id DESC LIMIT 1');
+    const [lastPatient] = await db.query('SELECT patient_code FROM patients WHERE lab_id = ? ORDER BY id DESC LIMIT 1', [lab_id]);
     let patientCode = 'PAT0001';
     if (lastPatient.length > 0) {
       const lastCode = parseInt(lastPatient[0].patient_code.replace('PAT', ''));
@@ -68,9 +72,9 @@ exports.createPatient = async (req, res) => {
     }
 
     const [result] = await db.query(
-      `INSERT INTO patients (patient_code, name, date_of_birth, age, gender, phone, email, address, blood_group, emergency_contact, medical_history) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [patientCode, name, date_of_birth, age, gender, phone, email, address, blood_group, emergency_contact, medical_history]
+      `INSERT INTO patients (patient_code, name, date_of_birth, age, gender, phone, email, address, blood_group, emergency_contact, medical_history, lab_id) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [patientCode, name, date_of_birth, age, gender, phone, email, address, blood_group, emergency_contact, medical_history, lab_id]
     );
 
     res.status(201).json({ message: 'Patient created successfully', id: result.insertId, patient_code: patientCode });
@@ -78,14 +82,16 @@ exports.createPatient = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 exports.updatePatient = async (req, res) => {
   try {
     const { name, date_of_birth, age, gender, phone, email, address, blood_group, emergency_contact, medical_history } = req.body;
+    const lab_id = req.lab_id;
 
     await db.query(
       `UPDATE patients SET name = ?, date_of_birth = ?, age = ?, gender = ?, phone = ?, email = ?, 
-       address = ?, blood_group = ?, emergency_contact = ?, medical_history = ? WHERE id = ?`,
-      [name, date_of_birth, age, gender, phone, email, address, blood_group, emergency_contact, medical_history, req.params.id]
+       address = ?, blood_group = ?, emergency_contact = ?, medical_history = ? WHERE id = ? AND lab_id = ?`,
+      [name, date_of_birth, age, gender, phone, email, address, blood_group, emergency_contact, medical_history, req.params.id, lab_id]
     );
 
     res.json({ message: 'Patient updated successfully' });
@@ -93,9 +99,10 @@ exports.updatePatient = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 exports.deletePatient = async (req, res) => {
   try {
-    await db.query('UPDATE patients SET is_active = FALSE WHERE id = ?', [req.params.id]);
+    await db.query('UPDATE patients SET is_active = FALSE WHERE id = ? AND lab_id = ?', [req.params.id, req.lab_id]);
     res.json({ message: 'Patient deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });

@@ -11,8 +11,8 @@ exports.getAllOrders = async (req, res) => {
                  FROM patient_test_orders o
                  LEFT JOIN patients p ON o.patient_id = p.id
                  LEFT JOIN doctors d ON o.doctor_id = d.id
-                 WHERE 1=1`;
-    let params = [];
+                 WHERE o.lab_id = ?`;
+    let params = [req.lab_id];
 
     if (status) {
       query += ' AND o.status = ?';
@@ -39,7 +39,7 @@ exports.getAllOrders = async (req, res) => {
 
     const [orders] = await db.query(query, params);
 
-    const [countResult] = await db.query('SELECT COUNT(*) as total FROM patient_test_orders');
+    const [countResult] = await db.query('SELECT COUNT(*) as total FROM patient_test_orders WHERE lab_id = ?', [req.lab_id]);
 
     res.json({
       data: orders,
@@ -62,8 +62,8 @@ exports.getOrderById = async (req, res) => {
        LEFT JOIN patients p ON o.patient_id = p.id
        LEFT JOIN doctors d ON o.doctor_id = d.id
        LEFT JOIN users u ON o.created_by = u.id
-       WHERE o.id = ?`,
-      [req.params.id]
+       WHERE o.id = ? AND o.lab_id = ?`,
+      [req.params.id, req.lab_id]
     );
 
     if (orders.length === 0) {
@@ -102,6 +102,7 @@ exports.createOrder = async (req, res) => {
     await connection.beginTransaction();
     console.log('begin-transaction');
     const { patient_id, doctor_id, priority, notes, tests, discount = 0 } = req.body;
+    const lab_id = req.lab_id;
     console.log(req.body);
 
     // Generate order number
@@ -116,9 +117,9 @@ exports.createOrder = async (req, res) => {
     const total_amount = tests.reduce((sum, test) => sum + parseFloat(test.price), 0);
 
     const [orderResult] = await connection.query(
-      `INSERT INTO patient_test_orders (order_number, patient_id, doctor_id, priority, total_amount, discount, notes, created_by) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [orderNumber, patient_id, doctor_id, priority, total_amount, discount, notes, 1]
+      `INSERT INTO patient_test_orders (order_number, patient_id, doctor_id, priority, total_amount, discount, notes, created_by, lab_id) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [orderNumber, patient_id, doctor_id, priority, total_amount, discount, notes, req.user.id, lab_id]
     );
 
     const orderId = orderResult.insertId;
@@ -150,7 +151,7 @@ exports.updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
     console.log('status = ' + status);
-    await db.query('UPDATE patient_test_orders SET status = ? WHERE id = ?', [status, req.params.id]);
+    await db.query('UPDATE patient_test_orders SET status = ? WHERE id = ? AND lab_id = ?', [status, req.params.id, req.lab_id]);
 
     if (status.toUpperCase() === 'COMPLETED') {
       console.log('called----------------');
@@ -159,8 +160,8 @@ exports.updateOrderStatus = async (req, res) => {
         `SELECT o.order_number, p.email, p.name as patient_name
          FROM patient_test_orders o
          JOIN patients p ON o.patient_id = p.id
-         WHERE o.id = ?`,
-        [req.params.id]
+         WHERE o.id = ? AND o.lab_id = ?`,
+        [req.params.id, req.lab_id]
       );
 
       if (orderDetails.length > 0) {
@@ -187,13 +188,13 @@ exports.addPayment = async (req, res) => {
     // Insert payment
     await connection.query(
       'INSERT INTO payments (order_id, amount, payment_method, transaction_id, notes, received_by) VALUES (?, ?, ?, ?, ?, ?)',
-      [order_id, amount, payment_method, transaction_id, notes, 1]
+      [order_id, amount, payment_method, transaction_id, notes, req.user.id]
     );
 
     // Update order payment status
     const [order] = await connection.query(
-      'SELECT total_amount, discount, paid_amount FROM patient_test_orders WHERE id = ?',
-      [order_id]
+      'SELECT total_amount, discount, paid_amount FROM patient_test_orders WHERE id = ? AND lab_id = ?',
+      [order_id, req.lab_id]
     );
 
     const newPaidAmount = parseFloat(order[0].paid_amount) + parseFloat(amount);

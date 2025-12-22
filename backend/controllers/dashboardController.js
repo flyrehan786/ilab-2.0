@@ -6,40 +6,40 @@ exports.getDashboardStats = async (req, res) => {
     const { dateRange, startDate, endDate } = req.query;
     
     // Total patients
-    const [patientCount] = await db.query('SELECT COUNT(*) as count FROM patients WHERE is_active = TRUE');
+    const [patientCount] = await db.query('SELECT COUNT(*) as count FROM patients WHERE is_active = TRUE AND lab_id = ?', [req.lab_id]);
 
     // Total doctors
-    const [doctorCount] = await db.query('SELECT COUNT(*) as count FROM doctors WHERE is_active = TRUE');
+    const [doctorCount] = await db.query('SELECT COUNT(*) as count FROM doctors WHERE is_active = TRUE AND lab_id = ?', [req.lab_id]);
 
     // Total orders
-    const [totalOrdersCount] = await db.query('SELECT COUNT(*) as count FROM patient_test_orders');
+    const [totalOrdersCount] = await db.query('SELECT COUNT(*) as count FROM patient_test_orders WHERE lab_id = ?', [req.lab_id]);
 
     // Total users
-    const [userCount] = await db.query('SELECT COUNT(*) as count FROM users WHERE is_active = TRUE');
+    const [userCount] = await db.query('SELECT COUNT(*) as count FROM users WHERE is_active = TRUE AND lab_id = ?', [req.lab_id]);
 
     // Total orders today
     const [todayOrders] = await db.query(
-      'SELECT COUNT(*) as count FROM patient_test_orders WHERE DATE(created_at) = CURDATE()'
+      'SELECT COUNT(*) as count FROM patient_test_orders WHERE DATE(created_at) = CURDATE() AND lab_id = ?', [req.lab_id]
     );
 
     // Pending orders
     const [pendingOrders] = await db.query(
-      'SELECT COUNT(*) as count FROM patient_test_orders WHERE status IN ("pending", "sample_collected", "in_progress")'
+      'SELECT COUNT(*) as count FROM patient_test_orders WHERE status IN ("pending", "sample_collected", "in_progress") AND lab_id = ?', [req.lab_id]
     );
 
     // Today's revenue
     const [todayRevenue] = await db.query(
-      'SELECT SUM(amount) as revenue FROM payments WHERE DATE(payment_date) = CURDATE()'
+      'SELECT SUM(p.amount) as revenue FROM payments p JOIN patient_test_orders o ON p.order_id = o.id WHERE DATE(p.payment_date) = CURDATE() AND o.lab_id = ?', [req.lab_id]
     );
 
     // Total received payments
     const [totalReceivedPayments] = await db.query(
-      'SELECT SUM(paid_amount) as total FROM patient_test_orders WHERE paid_amount > 0'
+      'SELECT SUM(paid_amount) as total FROM patient_test_orders WHERE paid_amount > 0 AND lab_id = ?', [req.lab_id]
     );
 
     // Total unpaid payments (total_amount - paid_amount for all orders)
     const [totalUnpaidPayments] = await db.query(
-      'SELECT SUM(total_amount - paid_amount) as total FROM patient_test_orders WHERE (total_amount - paid_amount) > 0'
+      'SELECT SUM(total_amount - paid_amount) as total FROM patient_test_orders WHERE (total_amount - paid_amount) > 0 AND lab_id = ?', [req.lab_id]
     );
 
     // Recent orders
@@ -48,31 +48,35 @@ exports.getDashboardStats = async (req, res) => {
               p.name as patient_name, p.patient_code
        FROM patient_test_orders o
        JOIN patients p ON o.patient_id = p.id
+       WHERE o.lab_id = ?
        ORDER BY o.created_at DESC
-       LIMIT 10`
+       LIMIT 10`, [req.lab_id]
     );
 
     // Orders by status
     const [ordersByStatus] = await db.query(
       `SELECT status, COUNT(*) as count 
        FROM patient_test_orders 
-       GROUP BY status`
+       WHERE lab_id = ?
+       GROUP BY status`, [req.lab_id]
     );
 
     // Revenue by month (last 6 months)
     const [revenueByMonth] = await db.query(
-      `SELECT DATE_FORMAT(payment_date, '%Y-%m') as month, SUM(amount) as revenue
-       FROM payments
-       WHERE payment_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
-       GROUP BY DATE_FORMAT(payment_date, '%Y-%m')
-       ORDER BY month ASC`
+      `SELECT DATE_FORMAT(p.payment_date, '%Y-%m') as month, SUM(p.amount) as revenue
+       FROM payments p
+       JOIN patient_test_orders o ON p.order_id = o.id
+       WHERE p.payment_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH) AND o.lab_id = ?
+       GROUP BY DATE_FORMAT(p.payment_date, '%Y-%m')
+       ORDER BY month ASC`, [req.lab_id]
     );
 
     // Top tests with dynamic date range
     let topTestsQuery = `SELECT t.name, COUNT(*) as count
        FROM patient_test_order_items oi
        JOIN tests t ON oi.test_id = t.id
-       WHERE `;
+       JOIN patient_test_orders o ON oi.order_id = o.id
+       WHERE o.lab_id = ? AND `;
     
     let dateCondition = '';
     const queryParams = [];
