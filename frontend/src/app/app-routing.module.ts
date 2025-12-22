@@ -12,9 +12,11 @@ import { NewOrderComponent } from './components/new-order/new-order.component';
 import { ReportsComponent } from './components/reports/reports.component';
 import { UsersComponent } from './components/users/users.component';
 import { AuthGuard } from './guards/auth.guard';
+import { RegisterLabComponent } from './components/register-lab/register-lab.component';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
+  { path: 'register-lab', component: RegisterLabComponent },
   {
     path: '',
     component: LayoutComponent,

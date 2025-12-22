@@ -13,8 +13,8 @@ const dashboardController = require('../controllers/dashboardController');
 const userController = require('../controllers/userController');
 
 // Auth routes
+router.post('/auth/register-lab', authController.registerLab);
 router.post('/auth/login', authController.login);
-router.post('/auth/register', auth, authorize('admin'), authController.register);
 router.get('/auth/profile', auth, authController.getProfile);
 
 // Patient routes

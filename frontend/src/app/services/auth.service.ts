@@ -22,20 +22,36 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
-  login(username: string, password: string) {
+    login(username: string, password: string) {
     return this.http.post<any>(`${environment.apiUrl}/auth/login`, { username, password })
       .pipe(tap(response => {
         if (response && response.token) {
           localStorage.setItem('currentUser', JSON.stringify(response));
           localStorage.setItem('token', response.token);
+
+          // Decode token to get lab_id
+          try {
+            const tokenPayload = JSON.parse(atob(response.token.split('.')[1]));
+            if (tokenPayload.lab_id) {
+              localStorage.setItem('lab_id', tokenPayload.lab_id);
+            }
+          } catch (e) {
+            console.error('Error decoding token', e);
+          }
+
           this.currentUserSubject.next(response);
         }
       }));
   }
 
+  registerLab(data: any): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/auth/register-lab`, data);
+  }
+
   logout() {
     localStorage.removeItem('currentUser');
     localStorage.removeItem('token');
+    localStorage.removeItem('lab_id');
     this.currentUserSubject.next(null);
     this.router.navigate(['/login']);
   }
@@ -46,5 +62,9 @@ export class AuthService {
 
   getToken(): string | null {
     return localStorage.getItem('token');
+  }
+
+  getLabId(): string | null {
+    return localStorage.getItem('lab_id');
   }
 }

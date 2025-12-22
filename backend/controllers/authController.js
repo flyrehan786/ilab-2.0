@@ -45,20 +45,35 @@ exports.login = async (req, res) => {
   }
 };
 
-exports.register = async (req, res) => {
+exports.registerLab = async (req, res) => {
+  const connection = await db.getConnection();
   try {
-    const { username, email, password, role, full_name, phone, lab_id } = req.body;
+    await connection.beginTransaction();
 
+    const { name, username, email, password, phone, address, registration_number } = req.body;
+
+    // 1. Create the lab
+    const [labResult] = await connection.query(
+      'INSERT INTO labs (name, email, phone, address, registration_number) VALUES (?, ?, ?, ?, ?)',
+      [name, email, phone, address, registration_number]
+    );
+    const labId = labResult.insertId;
+
+    // 2. Create the admin user for the lab
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    const [result] = await db.query(
-      'INSERT INTO users (username, email, password, role, full_name, phone, lab_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [username, email, hashedPassword, role, full_name, phone, lab_id]
+    await connection.query(
+      'INSERT INTO users (username, email, password, role, full_name, lab_id) VALUES (?, ?, ?, ?, ?, ?)',
+      [username, email, hashedPassword, 'admin', username, labId] // Using username as full_name
     );
 
-    res.status(201).json({ message: 'User created successfully', id: result.insertId });
+    await connection.commit();
+    res.status(201).json({ message: 'Lab and admin user created successfully' });
+
   } catch (error) {
+    await connection.rollback();
     res.status(500).json({ error: error.message });
+  } finally {
+    connection.release();
   }
 };
 
