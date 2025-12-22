@@ -33,7 +33,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let doctor of paginatedDoctors">
+            <tr *ngFor="let doctor of doctors">
               <td><strong>{{ doctor.name }}</strong></td>
               <td>{{ doctor.specialization || 'N/A' }}</td>
               <td>{{ doctor.phone }}</td>
@@ -48,7 +48,7 @@
                 </button>
               </td>
             </tr>
-            <tr *ngIf="filteredDoctors.length === 0">
+            <tr *ngIf="!loading && doctors.length === 0">
               <td colspan="6" class="text-center text-muted py-4">No doctors found</td>
             </tr>
           </tbody>
@@ -56,7 +56,7 @@
       </div>
 
       <!-- Pagination -->
-      <div class="d-flex justify-content-between align-items-center mt-3" *ngIf="filteredDoctors.length > 0">
+      <div class="d-flex justify-content-between align-items-center mt-3" *ngIf="!loading && totalItems > 0">
         <button class="btn btn-outline-secondary" (click)="previousPage()" [disabled]="currentPage === 1">
           Previous
         </button>

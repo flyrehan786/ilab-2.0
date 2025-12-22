@@ -3,47 +3,67 @@ const emailService = require('../services/emailService');
 
 exports.getAllOrders = async (req, res) => {
   try {
-    console.log('alllllllllllll')
-    const { status, patient_id, page = 1, limit = 10, dateFrom, dateTo } = req.query;
+    const { status, payment_status, search, page = 1, limit = 10, dateFrom, dateTo } = req.query;
     const offset = (page - 1) * limit;
 
-    let query = `SELECT o.*, p.name as patient_name, p.patient_code, d.name as doctor_name
-                 FROM patient_test_orders o
-                 LEFT JOIN patients p ON o.patient_id = p.id
-                 LEFT JOIN doctors d ON o.doctor_id = d.id
-                 WHERE o.lab_id = ?`;
+    let dataQuery = `SELECT o.*, p.name as patient_name, p.patient_code, d.name as doctor_name
+                     FROM patient_test_orders o
+                     LEFT JOIN patients p ON o.patient_id = p.id
+                     LEFT JOIN doctors d ON o.doctor_id = d.id
+                     WHERE o.lab_id = ?`;
+    let countQuery = `SELECT COUNT(*) as total
+                      FROM patient_test_orders o
+                      LEFT JOIN patients p ON o.patient_id = p.id
+                      LEFT JOIN doctors d ON o.doctor_id = d.id
+                      WHERE o.lab_id = ?`;
+
     let params = [req.lab_id];
 
     if (status) {
-      query += ' AND o.status = ?';
+      dataQuery += ' AND o.status = ?';
+      countQuery += ' AND o.status = ?';
       params.push(status);
     }
 
-    if (patient_id) {
-      query += ' AND o.patient_id = ?';
-      params.push(patient_id);
+    if (payment_status) {
+      dataQuery += ' AND o.payment_status = ?';
+      countQuery += ' AND o.payment_status = ?';
+      params.push(payment_status);
+    }
+
+    if (search) {
+      const searchTerm = `%${search}%`;
+      const searchQuery = ' AND (o.order_number LIKE ? OR p.name LIKE ? OR p.patient_code LIKE ? OR d.name LIKE ?)';
+      dataQuery += searchQuery;
+      countQuery += searchQuery;
+      params.push(searchTerm, searchTerm, searchTerm, searchTerm);
     }
 
     if (dateFrom) {
-      query += ' AND DATE(o.created_at) >= ?';
+      const dateFilter = ' AND DATE(o.created_at) >= ?';
+      dataQuery += dateFilter;
+      countQuery += dateFilter;
       params.push(dateFrom);
     }
 
     if (dateTo) {
-      query += ' AND DATE(o.created_at) <= ?';
+      const dateFilter = ' AND DATE(o.created_at) <= ?';
+      dataQuery += dateFilter;
+      countQuery += dateFilter;
       params.push(dateTo);
     }
 
-    query += ' ORDER BY o.created_at DESC LIMIT ? OFFSET ?';
+    const [countResult] = await db.query(countQuery, params);
+    const total = countResult[0].total;
+
+    dataQuery += ' ORDER BY o.created_at DESC LIMIT ? OFFSET ?';
     params.push(parseInt(limit), parseInt(offset));
 
-    const [orders] = await db.query(query, params);
-
-    const [countResult] = await db.query('SELECT COUNT(*) as total FROM patient_test_orders WHERE lab_id = ?', [req.lab_id]);
+    const [orders] = await db.query(dataQuery, params);
 
     res.json({
       data: orders,
-      total: countResult[0].total,
+      total: total,
       page: parseInt(page),
       limit: parseInt(limit)
     });

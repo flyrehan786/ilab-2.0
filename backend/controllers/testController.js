@@ -2,29 +2,46 @@ const db = require('../config/database');
 
 exports.getAllTests = async (req, res) => {
   try {
-    const { search, category_id } = req.query;
+    const { search, category_id, page = 1, limit = 10 } = req.query;
+    const offset = (page - 1) * limit;
 
-    let query = `SELECT t.*, tc.name as category_name 
-                 FROM tests t 
-                 LEFT JOIN test_categories tc ON t.category_id = tc.id 
-                 WHERE t.is_active = TRUE AND t.lab_id = ?`;
+    let countQuery = 'SELECT COUNT(*) as total FROM tests WHERE is_active = TRUE AND lab_id = ?';
+    let dataQuery = `SELECT t.*, tc.name as category_name 
+                   FROM tests t 
+                   LEFT JOIN test_categories tc ON t.category_id = tc.id 
+                   WHERE t.is_active = TRUE AND t.lab_id = ?`;
+    
     let params = [req.lab_id];
+    let countParams = [req.lab_id];
 
     if (search) {
-      query += ' AND (t.name LIKE ? OR t.test_code LIKE ?)';
       const searchTerm = `%${search}%`;
+      const searchQuery = ' AND (t.name LIKE ? OR t.test_code LIKE ?)';
+      dataQuery += searchQuery;
+      countQuery += ' AND (name LIKE ? OR test_code LIKE ?)';
       params.push(searchTerm, searchTerm);
+      countParams.push(searchTerm, searchTerm);
     }
 
     if (category_id) {
-      query += ' AND t.category_id = ?';
+      dataQuery += ' AND t.category_id = ?';
+      countQuery += ' AND category_id = ?';
       params.push(category_id);
+      countParams.push(category_id);
     }
 
-    query += ' ORDER BY t.name ASC';
+    dataQuery += ' ORDER BY t.name ASC LIMIT ? OFFSET ?';
+    params.push(parseInt(limit), parseInt(offset));
 
-    const [tests] = await db.query(query, params);
-    res.json(tests);
+    const [tests] = await db.query(dataQuery, params);
+    const [countResult] = await db.query(countQuery, countParams);
+
+    res.json({
+      data: tests,
+      total: countResult[0].total,
+      page: parseInt(page),
+      limit: parseInt(limit)
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

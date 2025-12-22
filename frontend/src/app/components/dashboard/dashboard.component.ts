@@ -11,7 +11,6 @@ export class DashboardComponent implements OnInit {
   loading = true;
   stats: any = {};
   recentOrders: any[] = [];
-  filteredOrders: any[] = [];
   ordersByStatus: any[] = [];
   topTests: any[] = [];
 
@@ -136,7 +135,10 @@ export class DashboardComponent implements OnInit {
   loadDashboardData() {
     this.loading = true;
     const params: any = {
-      dateRange: this.testDateRange
+      dateRange: this.testDateRange,
+      search: this.searchText,
+      status: this.selectedStatus,
+      date: this.selectedDate
     };
 
     if (this.testDateRange === 'custom' && this.testStartDate && this.testEndDate) {
@@ -148,7 +150,6 @@ export class DashboardComponent implements OnInit {
       next: (data) => {
         this.stats = data.stats;
         this.recentOrders = data.recentOrders;
-        this.filteredOrders = data.recentOrders;
         this.ordersByStatus = data.ordersByStatus;
         this.topTests = data.topTests;
         this.updateChartData();
@@ -246,31 +247,14 @@ export class DashboardComponent implements OnInit {
   }
 
   applyFilters() {
-    this.filteredOrders = this.recentOrders.filter(order => {
-      // Search filter (order number or patient name)
-      const searchMatch = !this.searchText || 
-        order.order_number.toLowerCase().includes(this.searchText.toLowerCase()) ||
-        order.patient_name.toLowerCase().includes(this.searchText.toLowerCase());
-
-      // Status filter
-      const statusMatch = !this.selectedStatus || order.status === this.selectedStatus;
-
-      // Date filter
-      let dateMatch = true;
-      if (this.selectedDate) {
-        const orderDate = new Date(order.created_at).toISOString().split('T')[0];
-        dateMatch = orderDate === this.selectedDate;
-      }
-
-      return searchMatch && statusMatch && dateMatch;
-    });
+    this.loadDashboardData();
   }
 
   clearFilters() {
     this.searchText = '';
     this.selectedStatus = '';
     this.selectedDate = '';
-    this.filteredOrders = this.recentOrders;
+    this.loadDashboardData();
   }
 
   setTestDateRange(range: string) {

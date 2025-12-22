@@ -11,14 +11,13 @@ declare var bootstrap: any;
 })
 export class DoctorsComponent implements OnInit {
   doctors: any[] = [];
-  filteredDoctors: any[] = [];
-  paginatedDoctors: any[] = [];
   loading = false;
   searchTerm = '';
   
   // Pagination
   currentPage = 1;
   itemsPerPage = 10;
+  totalItems = 0;
   totalPages = 0;
   doctorForm!: FormGroup;
   editMode = false;
@@ -48,10 +47,17 @@ export class DoctorsComponent implements OnInit {
 
   loadDoctors() {
     this.loading = true;
-    this.apiService.getDoctors().subscribe({
-      next: (data) => {
-        this.doctors = data;
-        this.filteredDoctors = data;
+    const params = {
+      page: this.currentPage,
+      limit: this.itemsPerPage,
+      search: this.searchTerm
+    };
+
+    this.apiService.getDoctors(params).subscribe({
+      next: (response) => {
+        this.doctors = response.data;
+        this.totalItems = response.total;
+        this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
         this.loading = false;
       },
       error: (error) => {
@@ -62,41 +68,21 @@ export class DoctorsComponent implements OnInit {
   }
 
   applyFilters() {
-    let filtered = [...this.doctors];
-
-    if (this.searchTerm) {
-      const term = this.searchTerm.toLowerCase();
-      filtered = filtered.filter(doctor => 
-        doctor.name.toLowerCase().includes(term) ||
-        (doctor.specialization && doctor.specialization.toLowerCase().includes(term)) ||
-        (doctor.phone && doctor.phone.includes(term)) ||
-        (doctor.email && doctor.email.toLowerCase().includes(term))
-      );
-    }
-
-    this.filteredDoctors = filtered;
     this.currentPage = 1;
-    this.updatePagination();
-  }
-
-  updatePagination() {
-    this.totalPages = Math.ceil(this.filteredDoctors.length / this.itemsPerPage);
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    const endIndex = startIndex + this.itemsPerPage;
-    this.paginatedDoctors = this.filteredDoctors.slice(startIndex, endIndex);
+    this.loadDoctors();
   }
 
   nextPage() {
     if (this.currentPage < this.totalPages) {
       this.currentPage++;
-      this.updatePagination();
+      this.loadDoctors();
     }
   }
 
   previousPage() {
     if (this.currentPage > 1) {
       this.currentPage--;
-      this.updatePagination();
+      this.loadDoctors();
     }
   }
 

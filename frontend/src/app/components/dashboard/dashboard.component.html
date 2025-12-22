@@ -210,7 +210,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr *ngFor="let order of filteredOrders">
+                  <tr *ngFor="let order of recentOrders">
                     <td><strong>{{ order.order_number }}</strong></td>
                     <td>
                       <div>{{ order.patient_name }}</div>
@@ -228,7 +228,7 @@
                       </button>
                     </td>
                   </tr>
-                  <tr *ngIf="filteredOrders.length === 0">
+                  <tr *ngIf="recentOrders.length === 0">
                     <td colspan="5" class="text-center text-muted py-4">No orders found</td>
                   </tr>
                 </tbody>

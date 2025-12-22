@@ -1,21 +1,35 @@
 const db = require('../config/database');
 exports.getAllDoctors = async (req, res) => {
   try {
-    const { search } = req.query;
+    const { search, page = 1, limit = 10 } = req.query;
+    const offset = (page - 1) * limit;
 
-    let query = 'SELECT * FROM doctors WHERE is_active = TRUE AND lab_id = ?';
+    let dataQuery = 'SELECT * FROM doctors WHERE is_active = TRUE AND lab_id = ?';
+    let countQuery = 'SELECT COUNT(*) as total FROM doctors WHERE is_active = TRUE AND lab_id = ?';
     let params = [req.lab_id];
 
     if (search) {
-      query += ' AND (name LIKE ? OR specialization LIKE ?)';
       const searchTerm = `%${search}%`;
+      const searchQuery = ' AND (name LIKE ? OR specialization LIKE ?)';
+      dataQuery += searchQuery;
+      countQuery += searchQuery;
       params.push(searchTerm, searchTerm);
     }
 
-    query += ' ORDER BY name ASC';
+    const [countResult] = await db.query(countQuery, params);
+    const total = countResult[0].total;
 
-    const [doctors] = await db.query(query, params);
-    res.json(doctors);
+    dataQuery += ' ORDER BY name ASC LIMIT ? OFFSET ?';
+    params.push(parseInt(limit), parseInt(offset));
+
+    const [doctors] = await db.query(dataQuery, params);
+
+    res.json({
+      data: doctors,
+      total: total,
+      page: parseInt(page),
+      limit: parseInt(limit)
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

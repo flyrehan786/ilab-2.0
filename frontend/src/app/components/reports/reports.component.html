@@ -12,19 +12,19 @@
         <div class="col-md-3">
           <label class="form-label">Search</label>
           <input type="text" class="form-control" placeholder="Search orders..." 
-                 [(ngModel)]="searchTerm" (keyup)="applyFilters()">
+                 [(ngModel)]="searchTerm" (keyup)="onFilterChange()">
         </div>
         <div class="col-md-3">
           <label class="form-label">From Date</label>
-          <input type="date" class="form-control" [(ngModel)]="dateFrom" (change)="filterByDate()">
+          <input type="date" class="form-control" [(ngModel)]="dateFrom" (change)="onFilterChange()">
         </div>
         <div class="col-md-3">
           <label class="form-label">To Date</label>
-          <input type="date" class="form-control" [(ngModel)]="dateTo" (change)="filterByDate()">
+          <input type="date" class="form-control" [(ngModel)]="dateTo" (change)="onFilterChange()">
         </div>
         <div class="col-md-3">
           <label class="form-label">Payment Status</label>
-          <select class="form-select" [(ngModel)]="paymentFilter" (change)="applyFilters()">
+          <select class="form-select" [(ngModel)]="paymentFilter" (change)="onFilterChange()">
             <option value="">All</option>
             <option value="unpaid">Unpaid</option>
             <option value="partial">Partial</option>
@@ -58,7 +58,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let order of paginatedOrders">
+            <tr *ngFor="let order of completedOrders">
               <td><strong>{{ order.order_number }}</strong></td>
               <td>
                 <div>{{ order.patient_name }}</div>
@@ -81,7 +81,7 @@
                 </button>
               </td>
             </tr>
-            <tr *ngIf="filteredOrders.length === 0">
+            <tr *ngIf="!loading && completedOrders.length === 0">
               <td colspan="7" class="text-center text-muted py-4">No completed orders found</td>
             </tr>
           </tbody>
@@ -89,7 +89,7 @@
       </div>
 
       <!-- Pagination -->
-      <div class="d-flex justify-content-between align-items-center mt-3" *ngIf="filteredOrders.length > 0">
+      <div class="d-flex justify-content-between align-items-center mt-3" *ngIf="!loading && totalItems > 0">
         <button class="btn btn-outline-secondary" (click)="previousPage()" [disabled]="currentPage === 1">
           Previous
         </button>

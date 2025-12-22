@@ -41,7 +41,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let test of paginatedTests">
+            <tr *ngFor="let test of tests">
               <td><strong>{{ test.test_code }}</strong></td>
               <td>{{ test.name }}</td>
               <td><span class="badge bg-info">{{ test.category_name || 'N/A' }}</span></td>
@@ -57,7 +57,7 @@
                 </button>
               </td>
             </tr>
-            <tr *ngIf="filteredTests.length === 0">
+            <tr *ngIf="!loading && tests.length === 0">
               <td colspan="7" class="text-center text-muted py-4">No tests found</td>
             </tr>
           </tbody>
@@ -65,7 +65,7 @@
       </div>
 
       <!-- Pagination -->
-      <div class="d-flex justify-content-between align-items-center mt-3" *ngIf="filteredTests.length > 0">
+      <div class="d-flex justify-content-between align-items-center mt-3" *ngIf="!loading && totalItems > 0">
         <button class="btn btn-outline-secondary" (click)="previousPage()" [disabled]="currentPage === 1">
           Previous
         </button>

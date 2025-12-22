@@ -11,18 +11,15 @@ declare var bootstrap: any;
 })
 export class PatientsComponent implements OnInit {
   patients: any[] = [];
-  filteredPatients: any[] = [];
-  paginatedPatients: any[] = [];
   loading = false;
   searchTerm = '';
-  genderFilter = '';
-  bloodGroupFilter = '';
   dateFrom = '';
   dateTo = '';
   
   // Pagination
   currentPage = 1;
   itemsPerPage = 10;
+  totalItems = 0;
   totalPages = 0;
   patientForm!: FormGroup;
   editMode = false;
@@ -59,20 +56,19 @@ export class PatientsComponent implements OnInit {
 
   loadPatients() {
     this.loading = true;
-    const params: any = {};
-    
-    if (this.dateFrom) {
-      params.dateFrom = this.dateFrom;
-    }
-    if (this.dateTo) {
-      params.dateTo = this.dateTo;
-    }
+    const params: any = {
+      page: this.currentPage,
+      limit: this.itemsPerPage,
+      search: this.searchTerm,
+      dateFrom: this.dateFrom,
+      dateTo: this.dateTo
+    };
 
     this.apiService.getPatients(params).subscribe({
       next: (response) => {
         this.patients = response.data;
-        this.filteredPatients = response.data;
-        this.applyFilters();
+        this.totalItems = response.total;
+        this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
         this.loading = false;
       },
       error: (error) => {
@@ -83,71 +79,21 @@ export class PatientsComponent implements OnInit {
   }
 
   onSearch() {
-    // If date filters are used, reload from backend
-    if (this.dateFrom || this.dateTo) {
-      this.loadPatients();
-    } else {
-      this.applyFilters();
-    }
-  }
-
-  applyFilters() {
-    let filtered = [...this.patients];
-
-    // Filter by search term
-    if (this.searchTerm) {
-      const term = this.searchTerm.toLowerCase();
-      filtered = filtered.filter(patient => 
-        patient.name.toLowerCase().includes(term) ||
-        patient.patient_code.toLowerCase().includes(term) ||
-        patient.phone.includes(term) ||
-        (patient.email && patient.email.toLowerCase().includes(term))
-      );
-    }
-
-    // Filter by gender
-    if (this.genderFilter) {
-      filtered = filtered.filter(patient => patient.gender === this.genderFilter);
-    }
-
-    // Filter by blood group
-    if (this.bloodGroupFilter) {
-      filtered = filtered.filter(patient => patient.blood_group === this.bloodGroupFilter);
-    }
-
-    // Filter by date range
-    if (this.dateFrom) {
-      filtered = filtered.filter(patient => new Date(patient.created_at) >= new Date(this.dateFrom));
-    }
-    if (this.dateTo) {
-      const toDate = new Date(this.dateTo);
-      toDate.setHours(23, 59, 59, 999);
-      filtered = filtered.filter(patient => new Date(patient.created_at) <= toDate);
-    }
-
-    this.filteredPatients = filtered;
     this.currentPage = 1;
-    this.updatePagination();
-  }
-
-  updatePagination() {
-    this.totalPages = Math.ceil(this.filteredPatients.length / this.itemsPerPage);
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    const endIndex = startIndex + this.itemsPerPage;
-    this.paginatedPatients = this.filteredPatients.slice(startIndex, endIndex);
+    this.loadPatients();
   }
 
   nextPage() {
     if (this.currentPage < this.totalPages) {
       this.currentPage++;
-      this.updatePagination();
+      this.loadPatients();
     }
   }
 
   previousPage() {
     if (this.currentPage > 1) {
       this.currentPage--;
-      this.updatePagination();
+      this.loadPatients();
     }
   }
 

@@ -66,9 +66,16 @@ exports.createPatient = async (req, res) => {
     // Generate patient code
     const [lastPatient] = await db.query('SELECT patient_code FROM patients WHERE lab_id = ? ORDER BY id DESC LIMIT 1', [lab_id]);
     let patientCode = 'PAT0001';
-    if (lastPatient.length > 0) {
-      const lastCode = parseInt(lastPatient[0].patient_code.replace('PAT', ''));
-      patientCode = 'PAT' + String(lastCode + 1).padStart(4, '0');
+    if (lastPatient && lastPatient.length > 0 && lastPatient[0].patient_code) {
+        try {
+            const lastCode = parseInt(lastPatient[0].patient_code.replace('PAT', ''));
+            if (!isNaN(lastCode)) {
+                patientCode = 'PAT' + String(lastCode + 1).padStart(4, '0');
+            }
+        } catch (e) {
+            // Fallback in case of parsing error
+            console.error('Error parsing patient code:', e);
+        }
     }
 
     const [result] = await db.query(

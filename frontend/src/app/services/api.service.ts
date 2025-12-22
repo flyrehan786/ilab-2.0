@@ -48,10 +48,14 @@ export class ApiService {
   }
 
   // Doctors
-  getDoctors(search?: string): Observable<any> {
-    let params = new HttpParams();
-    if (search) params = params.set('search', search);
-    return this.http.get(`${environment.apiUrl}/doctors`, { params });
+  getDoctors(params?: any): Observable<any> {
+    let httpParams = new HttpParams();
+    if (params) {
+      Object.keys(params).forEach(key => {
+        if (params[key]) httpParams = httpParams.set(key, params[key]);
+      });
+    }
+    return this.http.get(`${environment.apiUrl}/doctors`, { params: httpParams });
   }
 
   getDoctor(id: number): Observable<any> {

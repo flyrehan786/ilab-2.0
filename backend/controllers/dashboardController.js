@@ -42,16 +42,33 @@ exports.getDashboardStats = async (req, res) => {
       'SELECT SUM(total_amount - paid_amount) as total FROM patient_test_orders WHERE (total_amount - paid_amount) > 0 AND lab_id = ?', [req.lab_id]
     );
 
-    // Recent orders
-    const [recentOrders] = await db.query(
-      `SELECT o.id, o.order_number, o.status, o.created_at, 
-              p.name as patient_name, p.patient_code
-       FROM patient_test_orders o
-       JOIN patients p ON o.patient_id = p.id
-       WHERE o.lab_id = ?
-       ORDER BY o.created_at DESC
-       LIMIT 10`, [req.lab_id]
-    );
+    // Recent orders with filtering
+    const { search, status, date } = req.query;
+    let recentOrdersQuery = `SELECT o.id, o.order_number, o.status, o.created_at, 
+                                  p.name as patient_name, p.patient_code
+                           FROM patient_test_orders o
+                           JOIN patients p ON o.patient_id = p.id
+                           WHERE o.lab_id = ?`;
+    const recentOrdersParams = [req.lab_id];
+
+    if (search) {
+      recentOrdersQuery += ' AND (o.order_number LIKE ? OR p.name LIKE ?)';
+      const searchTerm = `%${search}%`;
+      recentOrdersParams.push(searchTerm, searchTerm);
+    }
+
+    if (status) {
+      recentOrdersQuery += ' AND o.status = ?';
+      recentOrdersParams.push(status);
+    }
+
+    if (date) {
+      recentOrdersQuery += ' AND DATE(o.created_at) = ?';
+      recentOrdersParams.push(date);
+    }
+
+    recentOrdersQuery += ' ORDER BY o.created_at DESC LIMIT 10';
+    const [recentOrders] = await db.query(recentOrdersQuery, recentOrdersParams);
 
     // Orders by status
     const [ordersByStatus] = await db.query(

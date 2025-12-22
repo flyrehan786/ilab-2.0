@@ -22,29 +22,6 @@
           <label class="form-label">To Date</label>
           <input type="date" class="form-control" [(ngModel)]="dateTo" (change)="onSearch()">
         </div>
-        <div class="col">
-          <label class="form-label">Filter by Gender</label>
-          <select class="form-select" [(ngModel)]="genderFilter" (change)="onSearch()">
-            <option value="">All Genders</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
-        <div class="col">
-          <label class="form-label">Filter by Blood Group</label>
-          <select class="form-select" [(ngModel)]="bloodGroupFilter" (change)="onSearch()">
-            <option value="">All Blood Groups</option>
-            <option value="A+">A+</option>
-            <option value="A-">A-</option>
-            <option value="B+">B+</option>
-            <option value="B-">B-</option>
-            <option value="AB+">AB+</option>
-            <option value="AB-">AB-</option>
-            <option value="O+">O+</option>
-            <option value="O-">O-</option>
-          </select>
-        </div>
       </div>
 
       <div *ngIf="loading" class="text-center py-5">
@@ -64,7 +41,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let patient of paginatedPatients">
+            <tr *ngFor="let patient of patients">
               <td><strong>{{ patient.patient_code }}</strong></td>
               <td>{{ patient.name }}</td>
               <td>{{ patient.age }} / {{ patient.gender }}</td>
@@ -79,7 +56,7 @@
                 </button>
               </td>
             </tr>
-            <tr *ngIf="filteredPatients.length === 0">
+            <tr *ngIf="!loading && patients.length === 0">
               <td colspan="6" class="text-center text-muted py-4">No patients found</td>
             </tr>
           </tbody>
@@ -87,7 +64,7 @@
       </div>
 
       <!-- Pagination -->
-      <div class="d-flex justify-content-between align-items-center mt-3" *ngIf="filteredPatients.length > 0">
+      <div class="d-flex justify-content-between align-items-center mt-3" *ngIf="!loading && totalItems > 0">
         <button class="btn btn-outline-secondary" (click)="previousPage()" [disabled]="currentPage === 1">
           Previous
         </button>
