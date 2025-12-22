@@ -48,6 +48,10 @@ export class ApiService {
   }
 
   // Doctors
+  getDoctorsForDropdown(): Observable<any> {
+    return this.http.get(`${environment.apiUrl}/doctors/all`);
+  }
+
   getDoctors(params?: any): Observable<any> {
     let httpParams = new HttpParams();
     if (params) {
@@ -89,8 +93,30 @@ export class ApiService {
     return this.http.get(`${environment.apiUrl}/tests/${id}`);
   }
 
-  getTestCategories(): Observable<any> {
-    return this.http.get(`${environment.apiUrl}/test-categories`);
+  getTestCategoriesForDropdown(): Observable<any> {
+    return this.http.get(`${environment.apiUrl}/test-categories/all`);
+  }
+
+  getTestCategories(params?: any): Observable<any> {
+    let httpParams = new HttpParams();
+    if (params) {
+      Object.keys(params).forEach(key => {
+        if (params[key]) httpParams = httpParams.set(key, params[key]);
+      });
+    }
+    return this.http.get(`${environment.apiUrl}/test-categories`, { params: httpParams });
+  }
+
+  createTestCategory(data: any): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/test-categories`, data);
+  }
+
+  updateTestCategory(id: number, data: any): Observable<any> {
+    return this.http.put(`${environment.apiUrl}/test-categories/${id}`, data);
+  }
+
+  deleteTestCategory(id: number): Observable<any> {
+    return this.http.delete(`${environment.apiUrl}/test-categories/${id}`);
   }
 
   createTest(data: any): Observable<any> {

@@ -4,29 +4,49 @@ const bcrypt = require('bcryptjs');
 // Get all users
 exports.getAllUsers = async (req, res) => {
   try {
-    const { dateFrom, dateTo } = req.query;
-    
-    let query = `
-      SELECT id, username, email, role, full_name, phone, is_active, created_at, updated_at 
-      FROM users 
-      WHERE lab_id = ?
-    `;
+    const { dateFrom, dateTo, page = 1, limit = 10, search } = req.query;
+    const offset = (page - 1) * limit;
+
+    let dataQuery = 'SELECT id, username, email, role, full_name, phone, is_active, created_at, updated_at FROM users WHERE lab_id = ?';
+    let countQuery = 'SELECT COUNT(*) as total FROM users WHERE lab_id = ?';
     let params = [req.lab_id];
 
+    if (search) {
+      const searchTerm = `%${search}%`;
+      const searchQuery = ' AND (username LIKE ? OR email LIKE ? OR full_name LIKE ?)';
+      dataQuery += searchQuery;
+      countQuery += searchQuery;
+      params.push(searchTerm, searchTerm, searchTerm);
+    }
+
     if (dateFrom) {
-      query += ' AND DATE(created_at) >= ?';
+      const dateQuery = ' AND DATE(created_at) >= ?';
+      dataQuery += dateQuery;
+      countQuery += dateQuery;
       params.push(dateFrom);
     }
 
     if (dateTo) {
-      query += ' AND DATE(created_at) <= ?';
+      const dateQuery = ' AND DATE(created_at) <= ?';
+      dataQuery += dateQuery;
+      countQuery += dateQuery;
       params.push(dateTo);
     }
 
-    query += ' ORDER BY created_at DESC';
-    
-    const [results] = await db.query(query, params);
-    res.json({ success: true, data: results });
+    const [countResult] = await db.query(countQuery, params);
+    const total = countResult[0].total;
+
+    dataQuery += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+    const queryParams = [...params, parseInt(limit), parseInt(offset)];
+
+    const [users] = await db.query(dataQuery, queryParams);
+
+    res.json({
+      data: users,
+      total,
+      page: parseInt(page),
+      limit: parseInt(limit)
+    });
   } catch (err) {
     console.error('Error fetching users:', err);
     res.status(500).json({ error: 'Failed to fetch users' });

@@ -52,15 +52,18 @@ export class NewOrderComponent implements OnInit {
   }
 
   loadDoctors() {
-    this.apiService.getDoctors().subscribe({
-      next: (data) => this.doctors = data,
+    this.apiService.getDoctorsForDropdown().subscribe({
+      next: (data) => {
+        console.log('Doctors data received:', data);
+        this.doctors = data;
+      },
       error: (error) => console.error('Error:', error)
     });
   }
 
   loadTests() {
     this.apiService.getTests({ search: this.searchTest }).subscribe({
-      next: (data) => this.tests = data,
+      next: (response) => this.tests = response.data,
       error: (error) => console.error('Error:', error)
     });
   }

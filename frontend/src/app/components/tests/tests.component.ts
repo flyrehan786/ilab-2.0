@@ -94,7 +94,7 @@ export class TestsComponent implements OnInit {
   }
 
   loadCategories() {
-    this.apiService.getTestCategories().subscribe({
+    this.apiService.getTestCategoriesForDropdown().subscribe({
       next: (data) => this.categories = data,
       error: (error) => console.error('Error:', error)
     });

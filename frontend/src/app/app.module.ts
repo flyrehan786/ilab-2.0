@@ -21,6 +21,7 @@ import { NewOrderComponent } from './components/new-order/new-order.component';
 import { ReportsComponent } from './components/reports/reports.component';
 import { UsersComponent } from './components/users/users.component';
 import { RegisterLabComponent } from './components/register-lab/register-lab.component';
+import { TestCategoriesComponent } from './components/test-categories/test-categories.component';
 
 @NgModule({
   declarations: [
@@ -36,7 +37,8 @@ import { RegisterLabComponent } from './components/register-lab/register-lab.com
     NewOrderComponent,
     ReportsComponent,
     UsersComponent,
-    RegisterLabComponent
+    RegisterLabComponent,
+    TestCategoriesComponent
   ],
   imports: [
     BrowserModule,

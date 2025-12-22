@@ -74,7 +74,7 @@
                       <small class="text-muted">{{ test.test_code }}</small>
                     </div>
                     <div class="text-end ms-3">
-                      <div class="fw-bold text-primary mb-2">₹{{ test.price }}</div>
+                      <div class="fw-bold text-primary mb-2">Rs.{{ test.price }}</div>
                       <button type="button" class="btn btn-sm btn-primary" 
                               (click)="addTest(test)">
                         Add
@@ -109,7 +109,7 @@
                     <small class="text-muted">{{ test.test_code }}</small>
                   </div>
                   <div class="text-end">
-                    <div class="fw-bold text-success mb-2">₹{{ test.price }}</div>
+                    <div class="fw-bold text-success mb-2">Rs.{{ test.price }}</div>
                     <button type="button" class="btn btn-sm btn-outline-danger" (click)="removeTest(i)">
                       <i class="bi bi-trash"></i>
                     </button>
@@ -121,16 +121,16 @@
           <div class="card-footer bg-white">
             <div class="d-flex justify-content-between mb-2">
               <span>Subtotal:</span>
-              <strong>₹{{ getTotalAmount() }}</strong>
+              <strong>Rs.{{ getTotalAmount() }}</strong>
             </div>
             <div class="d-flex justify-content-between mb-2">
               <span>Discount:</span>
-              <strong>₹{{ orderForm.value.discount || 0 }}</strong>
+              <strong>Rs.{{ orderForm.value.discount || 0 }}</strong>
             </div>
             <hr>
             <div class="d-flex justify-content-between mb-3">
               <span class="h5 mb-0">Total:</span>
-              <span class="h5 mb-0 text-primary">₹{{ getFinalAmount() }}</span>
+              <span class="h5 mb-0 text-primary">Rs.{{ getFinalAmount() }}</span>
             </div>
             <button type="submit" class="btn btn-primary w-100" [disabled]="loading || selectedTests.length === 0">
               <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>

@@ -13,6 +13,7 @@ import { ReportsComponent } from './components/reports/reports.component';
 import { UsersComponent } from './components/users/users.component';
 import { AuthGuard } from './guards/auth.guard';
 import { RegisterLabComponent } from './components/register-lab/register-lab.component';
+import { TestCategoriesComponent } from './components/test-categories/test-categories.component';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -27,6 +28,7 @@ const routes: Routes = [
       { path: 'patients', component: PatientsComponent },
       { path: 'doctors', component: DoctorsComponent },
       { path: 'tests', component: TestsComponent },
+      { path: 'test-categories', component: TestCategoriesComponent },
       { path: 'orders', component: OrdersComponent },
       { path: 'orders/new', component: NewOrderComponent },
       { path: 'orders/:id', component: OrderDetailComponent },

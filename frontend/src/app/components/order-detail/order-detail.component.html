@@ -70,7 +70,7 @@
                 <tr *ngFor="let item of order.items">
                   <td>
                     <strong>{{ item.test_name }}</strong>
-                    <div class="small text-muted">₹{{ item.price }}</div>
+                    <div class="small text-muted">Rs.{{ item.price }}</div>
                   </td>
                   <td>
                     <div *ngIf="item.result_value">
@@ -108,7 +108,7 @@
             <div *ngFor="let payment of order.payments" class="border-bottom pb-2 mb-2">
               <div class="d-flex justify-content-between">
                 <div>
-                  <strong>₹{{ payment.amount }}</strong>
+                  <strong>Rs.{{ payment.amount }}</strong>
                   <span class="badge bg-info ms-2">{{ payment.payment_method?.toUpperCase() }}</span>
                 </div>
                 <small class="text-muted">{{ payment.payment_date | date:'short' }}</small>
@@ -164,24 +164,24 @@
         <div class="card-body">
           <div class="d-flex justify-content-between mb-2">
             <span>Subtotal:</span>
-            <strong>₹{{ order.total_amount }}</strong>
+            <strong>Rs.{{ order.total_amount }}</strong>
           </div>
           <div class="d-flex justify-content-between mb-2">
             <span>Discount:</span>
-            <strong class="text-danger">-₹{{ order.discount }}</strong>
+            <strong class="text-danger">-Rs.{{ order.discount }}</strong>
           </div>
           <hr>
           <div class="d-flex justify-content-between mb-2">
             <span class="h6">Total:</span>
-            <strong class="h6">₹{{ order.total_amount - order.discount }}</strong>
+            <strong class="h6">Rs.{{ order.total_amount - order.discount }}</strong>
           </div>
           <div class="d-flex justify-content-between mb-3">
             <span>Paid:</span>
-            <strong class="text-success">₹{{ order.paid_amount }}</strong>
+            <strong class="text-success">Rs.{{ order.paid_amount }}</strong>
           </div>
           <div class="d-flex justify-content-between mb-3">
             <span class="h6">Balance:</span>
-            <strong class="h6 text-danger">₹{{ order.total_amount - order.discount - order.paid_amount }}</strong>
+            <strong class="h6 text-danger">Rs.{{ order.total_amount - order.discount - order.paid_amount }}</strong>
           </div>
           <div class="mb-3">
             <span class="badge w-100 py-2" [ngClass]="getPaymentBadgeClass(order.payment_status)">

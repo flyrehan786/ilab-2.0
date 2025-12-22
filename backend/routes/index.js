@@ -7,6 +7,7 @@ const authController = require('../controllers/authController');
 const patientController = require('../controllers/patientController');
 const doctorController = require('../controllers/doctorController');
 const testController = require('../controllers/testController');
+const testCategoryController = require('../controllers/testCategoryController');
 const orderController = require('../controllers/orderController');
 const resultController = require('../controllers/resultController');
 const dashboardController = require('../controllers/dashboardController');
@@ -25,6 +26,7 @@ router.put('/patients/:id', auth, patientController.updatePatient);
 router.delete('/patients/:id', auth, authorize('admin'), patientController.deletePatient);
 
 // Doctor routes
+router.get('/doctors/all', auth, doctorController.getAllDoctorsForDropdown);
 router.get('/doctors', auth, doctorController.getAllDoctors);
 router.get('/doctors/:id', auth, doctorController.getDoctorById);
 router.post('/doctors', auth, authorize('admin', 'receptionist'), doctorController.createDoctor);
@@ -34,10 +36,16 @@ router.delete('/doctors/:id', auth, authorize('admin'), doctorController.deleteD
 // Test routes
 router.get('/tests', auth, testController.getAllTests);
 router.get('/tests/:id', auth, testController.getTestById);
-router.get('/test-categories', auth, testController.getAllCategories);
 router.post('/tests', auth, authorize('admin'), testController.createTest);
 router.put('/tests/:id', auth, authorize('admin'), testController.updateTest);
 router.delete('/tests/:id', auth, authorize('admin'), testController.deleteTest);
+
+// Test Category routes
+router.get('/test-categories/all', auth, testCategoryController.getAllCategoriesForDropdown);
+router.get('/test-categories', auth, testCategoryController.getAllCategories);
+router.post('/test-categories', auth, authorize('admin', 'receptionist'), testCategoryController.createCategory);
+router.put('/test-categories/:id', auth, authorize('admin', 'receptionist'), testCategoryController.updateCategory);
+router.delete('/test-categories/:id', auth, authorize('admin', 'receptionist'), testCategoryController.deleteCategory);
 
 // Order routes
 router.get('/orders', auth, orderController.getAllOrders);

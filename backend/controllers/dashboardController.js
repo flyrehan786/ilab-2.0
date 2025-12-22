@@ -93,26 +93,23 @@ exports.getDashboardStats = async (req, res) => {
        FROM patient_test_order_items oi
        JOIN tests t ON oi.test_id = t.id
        JOIN patient_test_orders o ON oi.order_id = o.id
-       WHERE o.lab_id = ? AND `;
+       WHERE o.lab_id = ?`;
     
-    let dateCondition = '';
-    const queryParams = [];
+    const queryParams = [req.lab_id];
     
     if (dateRange === 'custom' && startDate && endDate) {
-      dateCondition = 'oi.created_at >= ? AND oi.created_at <= ?';
+      topTestsQuery += ' AND oi.created_at >= ? AND oi.created_at <= ?';
       queryParams.push(startDate, endDate);
     } else if (dateRange === '7') {
-      dateCondition = 'oi.created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)';
+      topTestsQuery += ' AND oi.created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)';
     } else if (dateRange === '14') {
-      dateCondition = 'oi.created_at >= DATE_SUB(CURDATE(), INTERVAL 14 DAY)';
-    } else if (dateRange === '30') {
-      dateCondition = 'oi.created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)';
+      topTestsQuery += ' AND oi.created_at >= DATE_SUB(CURDATE(), INTERVAL 14 DAY)';
     } else {
       // Default to 30 days
-      dateCondition = 'oi.created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)';
+      topTestsQuery += ' AND oi.created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)';
     }
     
-    topTestsQuery += dateCondition + `
+    topTestsQuery += `
        GROUP BY t.id, t.name
        ORDER BY count DESC
        LIMIT 5`;
