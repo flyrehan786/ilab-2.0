@@ -19,6 +19,7 @@ router.post('/auth/login', authController.login);
 router.get('/auth/profile', auth, authController.getProfile);
 
 // Patient routes
+router.get('/patients/all', auth, patientController.getAllPatientsForDropdown);
 router.get('/patients', auth, patientController.getAllPatients);
 router.get('/patients/:id', auth, patientController.getPatientById);
 router.post('/patients', auth, patientController.createPatient);

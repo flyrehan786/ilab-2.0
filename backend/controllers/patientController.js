@@ -1,5 +1,14 @@
 const db = require('../config/database');
 
+exports.getAllPatientsForDropdown = async (req, res) => {
+  try {
+    const [patients] = await db.query('SELECT id, name, patient_code FROM patients WHERE is_active = TRUE AND lab_id = ? ORDER BY name ASC', [req.lab_id]);
+    res.json(patients);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 exports.getAllPatients = async (req, res) => {
   try {
     const { search, page = 1, limit = 10, dateFrom, dateTo } = req.query;

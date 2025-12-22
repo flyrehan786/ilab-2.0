@@ -13,7 +13,7 @@
           <div class="card-body">
             <div class="row g-3">
               <div class="col-md-6">
-                <label class="form-label">Patient *</label>
+                <label class="form-label d-flex justify-content-between"><span>Patient *</span><button type="button" class="btn btn-sm btn-outline-primary py-0 px-1" (click)="openPatientModal()"><i class="bi bi-plus-lg"></i></button></label>
                 <select class="form-select" formControlName="patient_id">
                   <option value="">Select Patient</option>
                   <option *ngFor="let patient of patients" [value]="patient.id">
@@ -22,7 +22,7 @@
                 </select>
               </div>
               <div class="col-md-6">
-                <label class="form-label">Referring Doctor</label>
+                <label class="form-label d-flex justify-content-between"><span>Referring Doctor</span><button type="button" class="btn btn-sm btn-outline-primary py-0 px-1" (click)="openDoctorModal()"><i class="bi bi-plus-lg"></i></button></label>
                 <select class="form-select" formControlName="doctor_id">
                   <option value="">Select Doctor</option>
                   <option *ngFor="let doctor of doctors" [value]="doctor.id">
@@ -144,4 +144,133 @@
       </div>
     </div>
   </form>
+
+  <!-- Patient Modal -->
+  <div class="modal fade" id="patientModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Patient</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form [formGroup]="patientForm" (ngSubmit)="onPatientSubmit()">
+          <div class="modal-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Name *</label>
+                <input type="text" class="form-control" formControlName="name">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Age *</label>
+                <input type="number" class="form-control" formControlName="age">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Gender *</label>
+                <select class="form-select" formControlName="gender">
+                  <option value="">Select</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Phone *</label>
+                <input type="text" class="form-control" formControlName="phone">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-control" formControlName="email">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Date of Birth</label>
+                <input type="date" class="form-control" formControlName="date_of_birth">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Blood Group</label>
+                <select class="form-select" formControlName="blood_group">
+                  <option value="">Select</option>
+                  <option value="A+">A+</option>
+                  <option value="A-">A-</option>
+                  <option value="B+">B+</option>
+                  <option value="B-">B-</option>
+                  <option value="AB+">AB+</option>
+                  <option value="AB-">AB-</option>
+                  <option value="O+">O+</option>
+                  <option value="O-">O-</option>
+                </select>
+              </div>
+              <div class="col-md-12">
+                <label class="form-label">Address</label>
+                <textarea class="form-control" formControlName="address" rows="2"></textarea>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Emergency Contact</label>
+                <input type="text" class="form-control" formControlName="emergency_contact">
+              </div>
+              <div class="col-md-12">
+                <label class="form-label">Medical History</label>
+                <textarea class="form-control" formControlName="medical_history" rows="3"></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" [disabled]="loading">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="patientForm.invalid || loading">
+              <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+              <span *ngIf="!loading">Create</span>
+              <span *ngIf="loading">Saving...</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Doctor Modal -->
+  <div class="modal fade" id="doctorModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Doctor</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form [formGroup]="doctorForm" (ngSubmit)="onDoctorSubmit()">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Name *</label>
+              <input type="text" class="form-control" formControlName="name">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Specialization</label>
+              <input type="text" class="form-control" formControlName="specialization">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Phone *</label>
+              <input type="text" class="form-control" formControlName="phone">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-control" formControlName="email">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">License Number</label>
+              <input type="text" class="form-control" formControlName="license_number">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Address</label>
+              <textarea class="form-control" formControlName="address" rows="2"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" [disabled]="loading">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="doctorForm.invalid || loading">
+              <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+              <span *ngIf="!loading">Create</span>
+              <span *ngIf="loading">Saving...</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 </div>

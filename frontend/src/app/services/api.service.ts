@@ -21,6 +21,10 @@ export class ApiService {
   }
 
   // Patients
+  getPatientsForDropdown(): Observable<any> {
+    return this.http.get(`${environment.apiUrl}/patients/all`);
+  }
+
   getPatients(params?: any): Observable<any> {
     let httpParams = new HttpParams();
     if (params) {

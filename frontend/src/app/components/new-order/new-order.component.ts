@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ApiService } from '../../services/api.service';
+declare var bootstrap: any;
 
 @Component({
   selector: 'app-new-order',
@@ -9,6 +10,10 @@ import { ApiService } from '../../services/api.service';
   styleUrls: ['./new-order.component.css']
 })
 export class NewOrderComponent implements OnInit {
+  patientForm!: FormGroup;
+  doctorForm!: FormGroup;
+  patientModal: any;
+  doctorModal: any;
   orderForm!: FormGroup;
   patients: any[] = [];
   doctors: any[] = [];
@@ -26,6 +31,8 @@ export class NewOrderComponent implements OnInit {
 
   ngOnInit() {
     this.initForm();
+    this.initPatientForm();
+    this.initDoctorForm();
     this.loadPatients();
     this.loadDoctors();
     this.loadTests();
@@ -45,8 +52,8 @@ export class NewOrderComponent implements OnInit {
   }
 
   loadPatients() {
-    this.apiService.getPatients({ search: this.searchPatient }).subscribe({
-      next: (response) => this.patients = response.data,
+    this.apiService.getPatientsForDropdown().subscribe({
+      next: (data) => this.patients = data,
       error: (error) => console.error('Error:', error)
     });
   }
@@ -107,6 +114,90 @@ export class NewOrderComponent implements OnInit {
         console.error('Error creating order:', error);
         alert('Error creating order');
         this.loading = false;
+      }
+    });
+  }
+
+  initPatientForm() {
+    this.patientForm = this.formBuilder.group({
+      name: ['', Validators.required],
+      date_of_birth: [''],
+      age: ['', Validators.required],
+      gender: ['', Validators.required],
+      phone: ['', Validators.required],
+      email: [''],
+      address: [''],
+      blood_group: [''],
+      emergency_contact: [''],
+      medical_history: ['']
+    });
+  }
+
+  initDoctorForm() {
+    this.doctorForm = this.formBuilder.group({
+      name: ['', Validators.required],
+      specialization: [''],
+      phone: ['', Validators.required],
+      email: ['', [Validators.email]],
+      address: [''],
+      license_number: ['']
+    });
+  }
+
+  openPatientModal() {
+    this.patientForm.reset();
+    this.patientModal = new bootstrap.Modal(document.getElementById('patientModal'));
+    this.patientModal.show();
+  }
+
+  openDoctorModal() {
+    this.doctorForm.reset();
+    this.doctorModal = new bootstrap.Modal(document.getElementById('doctorModal'));
+    this.doctorModal.show();
+  }
+
+  onPatientSubmit() {
+    if (this.patientForm.invalid) {
+      alert('Please fill all required fields');
+      return;
+    }
+
+    this.loading = true;
+    this.apiService.createPatient(this.patientForm.value).subscribe({
+      next: (response) => {
+        this.loading = false;
+        this.patientModal.hide();
+        alert('Patient created successfully! Patient Code: ' + response.patient_code);
+        this.loadPatients();
+        this.orderForm.patchValue({ patient_id: response.id });
+      },
+      error: (error) => {
+        this.loading = false;
+        console.error('Error creating patient:', error);
+        alert('Error creating patient: ' + (error.error?.error || 'Unknown error'));
+      }
+    });
+  }
+
+  onDoctorSubmit() {
+    if (this.doctorForm.invalid) {
+      alert('Please fill all required fields');
+      return;
+    }
+
+    this.loading = true;
+    this.apiService.createDoctor(this.doctorForm.value).subscribe({
+      next: (response) => {
+        this.loading = false;
+        this.doctorModal.hide();
+        alert('Doctor created successfully!');
+        this.loadDoctors();
+        this.orderForm.patchValue({ doctor_id: response.data.id });
+      },
+      error: (error) => {
+        this.loading = false;
+        console.error('Error creating doctor:', error);
+        alert('Error creating doctor: ' + (error.error?.error || 'Unknown error'));
       }
     });
   }
