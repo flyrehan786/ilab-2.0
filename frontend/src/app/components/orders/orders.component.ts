@@ -40,12 +40,6 @@ export class OrdersComponent implements OnInit {
       dateTo: this.dateTo
     };
 
-    if (this.authService.isSuperAdmin()) {
-      const selectedLabId = localStorage.getItem('selectedLabId');
-      if (selectedLabId) {
-        params.lab_id = selectedLabId;
-      }
-    }
 
     this.apiService.getOrders(params).subscribe({
       next: (response) => {

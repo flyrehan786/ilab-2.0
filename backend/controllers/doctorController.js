@@ -101,13 +101,8 @@ exports.updateDoctor = async (req, res) => {
     const { name, specialization, phone, email, address, license_number } = req.body;
     const labId = req.lab_id;
 
-    let query = 'UPDATE doctors SET name = ?, specialization = ?, phone = ?, email = ?, address = ?, license_number = ? WHERE id = ?';
-    const params = [name, specialization, phone, email, address, license_number, req.params.id];
-
-    if (labId) {
-      query += ' AND lab_id = ?';
-      params.push(labId);
-    }
+    const query = 'UPDATE doctors SET name = ?, specialization = ?, phone = ?, email = ?, address = ?, license_number = ? WHERE id = ? AND lab_id = ?';
+    const params = [name, specialization, phone, email, address, license_number, req.params.id, labId];
 
     const [result] = await db.query(query, params);
 

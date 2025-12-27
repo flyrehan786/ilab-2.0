@@ -117,8 +117,8 @@ export class OrderDetailComponent implements OnInit {
       order_item_id: item.id,
       result_value: item.result_value || '',
       result_text: item.result_text || '',
-      normal_range: item.normal_range || '',
-      unit: item.unit || '',
+      normal_range: item.normal_range || item.master_normal_range || '',
+      unit: item.unit || item.master_unit || '',
       status: item.result_status || 'normal',
       remarks: item.remarks || ''
     });
@@ -364,8 +364,8 @@ export class OrderDetailComponent implements OnInit {
             <td class="test-value-col ${item.result_status === 'abnormal' ? 'abnormal' : ''}">
               ${item.result_value || item.result_text || 'NIL'}
             </td>
-            <td>${item.unit || ''}</td>
-            <td>${item.normal_range || ''}</td>
+            <td>${item.unit || item.master_unit || ''}</td>
+            <td>${item.normal_range || item.master_normal_range || ''}</td>
           </tr>
         `).join('')}
       </tbody>
@@ -387,7 +387,7 @@ export class OrderDetailComponent implements OnInit {
 
   <div class="footer">
     <div><strong>This is a computer generated report therefore does not require any signature.</strong></div>
-    <div>Printed only: ${currentDate} ${currentTime} / iLab System</div>
+    <div>Printed only: ${currentDate} ${currentTime} / MediQ System</div>
   </div>
 </body>
 </html>

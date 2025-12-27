@@ -44,12 +44,6 @@ export class TestCategoriesComponent implements OnInit {
       search: this.searchTerm
     };
 
-    if (this.authService.isSuperAdmin()) {
-      const selectedLabId = localStorage.getItem('selectedLabId');
-      if (selectedLabId) {
-        params.lab_id = selectedLabId;
-      }
-    }
     this.apiService.getTestCategories(params).subscribe({
       next: (response) => {
         console.log('Categories data received:', response);
@@ -102,14 +96,6 @@ export class TestCategoriesComponent implements OnInit {
     }
     const data = this.categoryForm.value;
 
-    if (this.authService.isSuperAdmin() && !this.editMode) {
-      const selectedLabId = localStorage.getItem('selectedLabId');
-      if (!selectedLabId) {
-        alert('Please select a lab from the filter before creating a category.');
-        return;
-      }
-      data.lab_id = selectedLabId;
-    }
     if (this.editMode && this.selectedCategoryId) {
       this.apiService.updateTestCategory(this.selectedCategoryId, data).subscribe(() => {
         this.modal.hide();

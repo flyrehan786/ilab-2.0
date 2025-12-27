@@ -142,12 +142,6 @@ export class DashboardComponent implements OnInit {
       date: this.selectedDate
     };
 
-    if (this.authService.isSuperAdmin()) {
-      const selectedLabId = localStorage.getItem('selectedLabId');
-      if (selectedLabId) {
-        params.lab_id = selectedLabId;
-      }
-    }
 
     if (this.testDateRange === 'custom' && this.testStartDate && this.testEndDate) {
       params.startDate = this.testStartDate;

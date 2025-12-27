@@ -66,12 +66,6 @@ export class PatientsComponent implements OnInit {
       dateTo: this.dateTo
     };
 
-    if (this.authService.isSuperAdmin()) {
-      const selectedLabId = localStorage.getItem('selectedLabId');
-      if (selectedLabId) {
-        params.lab_id = selectedLabId;
-      }
-    }
 
     this.apiService.getPatients(params).subscribe({
       next: (response) => {
@@ -111,7 +105,12 @@ export class PatientsComponent implements OnInit {
     this.selectedPatientId = patient?.id || null;
 
     if (patient) {
-      this.patientForm.patchValue(patient);
+      const patientData = { ...patient };
+      if (patientData.date_of_birth) {
+        // Format the date to YYYY-MM-DD for the date input field
+        patientData.date_of_birth = new Date(patientData.date_of_birth).toISOString().split('T')[0];
+      }
+      this.patientForm.patchValue(patientData);
     } else {
       this.patientForm.reset();
     }
@@ -129,15 +128,6 @@ export class PatientsComponent implements OnInit {
     const data = this.patientForm.value;
     this.loading = true;
 
-    if (this.authService.isSuperAdmin() && !this.editMode) {
-      const selectedLabId = localStorage.getItem('selectedLabId');
-      if (!selectedLabId) {
-        alert('Please select a lab from the filter before creating a patient.');
-        this.loading = false;
-        return;
-      }
-      data.lab_id = selectedLabId;
-    }
 
     if (this.editMode && this.selectedPatientId) {
       this.apiService.updatePatient(this.selectedPatientId, data).subscribe({

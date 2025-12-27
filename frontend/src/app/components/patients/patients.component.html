@@ -32,8 +32,7 @@
         <table class="table table-hover">
           <thead>
             <tr>
-              <th>Patient Code</th>
-              <th>Name</th>
+              <th>Code/Name</th>
               <th>Age/Gender</th>
               <th>Phone</th>
               <th>Blood Group</th>
@@ -42,8 +41,7 @@
           </thead>
           <tbody>
             <tr *ngFor="let patient of patients">
-              <td><strong>{{ patient.patient_code }}</strong></td>
-              <td>{{ patient.name }}</td>
+              <td><strong>{{ patient.patient_code }}</strong> / {{ patient.name }}</td>
               <td>{{ patient.age }} / {{ patient.gender }}</td>
               <td>{{ patient.phone }}</td>
               <td><span class="badge bg-danger">{{ patient.blood_group || 'N/A' }}</span></td>

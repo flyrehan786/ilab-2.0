@@ -24,8 +24,7 @@
         <table class="table table-hover">
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Specialization</th>
+              <th>Name / Specialization</th>
               <th>Phone</th>
               <th>Email</th>
               <th>License</th>
@@ -34,8 +33,7 @@
           </thead>
           <tbody>
             <tr *ngFor="let doctor of doctors">
-              <td><strong>{{ doctor.name }}</strong></td>
-              <td>{{ doctor.specialization || 'N/A' }}</td>
+              <td><strong>{{ doctor.name }}</strong> / {{ doctor.specialization || 'N/A' }}</td>
               <td>{{ doctor.phone }}</td>
               <td>{{ doctor.email || 'N/A' }}</td>
               <td>{{ doctor.license_number || 'N/A' }}</td>

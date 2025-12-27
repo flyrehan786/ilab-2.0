@@ -61,12 +61,6 @@ export class TestsComponent implements OnInit {
       category_id: this.categoryFilter
     };
 
-    if (this.authService.isSuperAdmin()) {
-      const selectedLabId = localStorage.getItem('selectedLabId');
-      if (selectedLabId) {
-        params.lab_id = selectedLabId;
-      }
-    }
 
     this.apiService.getTests(params).subscribe({
       next: (response) => {
@@ -103,12 +97,6 @@ export class TestsComponent implements OnInit {
 
   loadCategories() {
     const params: any = {};
-    if (this.authService.isSuperAdmin()) {
-      const selectedLabId = localStorage.getItem('selectedLabId');
-      if (selectedLabId) {
-        params.lab_id = selectedLabId;
-      }
-    }
     this.apiService.getTestCategoriesForDropdown(params).subscribe({
       next: (data) => this.categories = data,
       error: (error) => console.error('Error:', error)
@@ -136,15 +124,6 @@ export class TestsComponent implements OnInit {
     const data = this.testForm.value;
     this.loading = true;
 
-    if (this.authService.isSuperAdmin() && !this.editMode) {
-      const selectedLabId = localStorage.getItem('selectedLabId');
-      if (!selectedLabId) {
-        alert('Please select a lab from the filter before creating a test.');
-        this.loading = false;
-        return;
-      }
-      data.lab_id = selectedLabId;
-    }
     
     if (this.editMode && this.selectedTestId) {
       this.apiService.updateTest(this.selectedTestId, data).subscribe({

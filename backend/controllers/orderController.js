@@ -84,8 +84,18 @@ exports.getOrderById = async (req, res) => {
     }
 
     const [items] = await db.query(
-      `SELECT oi.*, tr.result_value, tr.result_text, tr.unit, tr.normal_range, tr.status as result_status, tr.remarks
+      `SELECT 
+         oi.*, 
+         t.unit as master_unit, 
+         t.normal_range as master_normal_range,
+         tr.result_value, 
+         tr.result_text, 
+         tr.unit, 
+         tr.normal_range, 
+         tr.status as result_status, 
+         tr.remarks
        FROM patient_test_order_items oi
+       LEFT JOIN tests t ON oi.test_id = t.id
        LEFT JOIN test_results tr ON oi.id = tr.order_item_id
        WHERE oi.order_id = ?`,
       [req.params.id]

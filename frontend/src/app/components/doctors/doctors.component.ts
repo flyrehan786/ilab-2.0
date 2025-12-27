@@ -54,12 +54,6 @@ export class DoctorsComponent implements OnInit {
       search: this.searchTerm
     };
 
-    if (this.authService.isSuperAdmin()) {
-      const selectedLabId = localStorage.getItem('selectedLabId');
-      if (selectedLabId) {
-        params.lab_id = selectedLabId;
-      }
-    }
 
     this.apiService.getDoctors(params).subscribe({
       next: (response) => {
@@ -115,15 +109,6 @@ export class DoctorsComponent implements OnInit {
     const data = this.doctorForm.value;
     this.loading = true;
 
-    if (this.authService.isSuperAdmin() && !this.editMode) {
-      const selectedLabId = localStorage.getItem('selectedLabId');
-      if (!selectedLabId) {
-        alert('Please select a lab from the filter before creating a doctor.');
-        this.loading = false;
-        return;
-      }
-      data.lab_id = selectedLabId;
-    }
     
     if (this.editMode && this.selectedDoctorId) {
       this.apiService.updateDoctor(this.selectedDoctorId, data).subscribe({

@@ -4,7 +4,6 @@
 .main-container {
   padding: 2rem;
   min-height: calc(100vh - 56px);
-  background-color: #ffffff;
 }
 
 /* Navbar active link styling */

@@ -79,9 +79,6 @@ exports.createUser = async (req, res) => {
   const { username, email, password, role, full_name, phone } = req.body;
   const lab_id = req.body.lab_id || req.lab_id;
 
-  if (req.user.role === 'super' && !req.body.lab_id) {
-    return res.status(400).json({ error: 'Lab ID is required for super admin' });
-  }
   
   // Validation
   if (!username || !email || !password || !role || !full_name) {
@@ -161,16 +158,7 @@ exports.updateUser = async (req, res) => {
       params = [username, email, role, full_name, phone || null, is_active ? 1 : 0, id, lab_id];
     }
     
-    let whereClause = ' WHERE id = ?';
-    let queryParams = [...params, id];
-
-    if (lab_id) {
-      whereClause += ' AND lab_id = ?';
-      queryParams.push(lab_id);
-    }
-
-    const finalQuery = updateQuery.replace('WHERE id = ? AND lab_id = ?', whereClause);
-    const [result] = await db.query(finalQuery, queryParams);
+    const [result] = await db.query(updateQuery, params);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'User not found or permission denied' });

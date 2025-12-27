@@ -11,13 +11,10 @@ const auth = (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
 
-    // super (super without a lab_id) can access all labs' data.
-    if (decoded.role === 'super' && !decoded.lab_id) {
-      // This is a super; don't set req.lab_id to allow access to all labs.
-    } else if (decoded.lab_id) {
+    if (decoded.lab_id) {
       req.lab_id = decoded.lab_id;
     } else {
-      // All other users must have a lab_id.
+      // All users must have a lab_id.
       return res.status(403).json({ error: 'Access denied. Lab ID is missing.' });
     }
     next();
@@ -33,10 +30,6 @@ const authorize = (...roles) => {
       return res.status(403).json({ error: 'Access denied. User role not found.' });
     }
 
-    // Allow 'super' to have all privileges
-    if (userRole === 'super') {
-      return next();
-    }
 
     if (!roles.includes(userRole)) {
       return res.status(403).json({ error: 'Access denied' });

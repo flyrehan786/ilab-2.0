@@ -2,7 +2,7 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
   <div class="container-fluid">
     <a class="navbar-brand" routerLink="/dashboard">
-      <strong>iLab</strong>
+      <strong style="color: #8B0000; font-style: italic;">MediQ</strong>
     </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
@@ -50,13 +50,6 @@
           </a>
         </li>
       </ul>
-      <div *ngIf="authService.isSuperAdmin()" class="d-flex align-items-center me-3">
-        <label for="labFilter" class="form-label me-2 mb-0">Lab:</label>
-        <select id="labFilter" class="form-select form-select-sm" [(ngModel)]="selectedLabId" (change)="onLabChange()">
-          <option value="">All Labs</option>
-          <option *ngFor="let lab of labs" [value]="lab.id">{{ lab.name }}</option>
-        </select>
-      </div>
 
       <ul class="navbar-nav">
         <li class="nav-item dropdown">
