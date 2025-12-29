@@ -191,13 +191,12 @@ export class OrderDetailComponent implements OnInit {
   <title>Lab Report - ${this.order.order_number}</title>
   <style>
     body {
-      font-family: 'Courier New', monospace;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
       padding: 8mm;
       background: rgb(255, 255, 255);
       color: #000;
-      font-size: 8pt;
-      line-height: 1.0;
+      line-height: 1.4;
     }
     .header {
       display: flex;
@@ -220,8 +219,11 @@ export class OrderDetailComponent implements OnInit {
       flex-shrink: 0;
     }
     .patient-info {
-      margin: 8px 0;
+      margin: 16px 0;
       font-size: 8pt;
+      border-top: 1px solid #ccc;
+      border-bottom: 1px solid #ccc;
+      padding: 8px 0;
     }
     .patient-header {
       background: #f0f0f0;
@@ -243,23 +245,20 @@ export class OrderDetailComponent implements OnInit {
       flex: 1;
     }
     .section-header {
-      font-weight: bold;
-      font-size: 8pt;
-      margin: 8px 0 4px 0;
-    }
-    .specimen-info {
-      margin: 6px 0;
-      font-size: 8pt;
-    }
+     font-weight: bold;
+     font-size: 8pt;
+     margin: 12px 0 4px 0;
+   }
     .results-section {
-      margin: 10px 0;
+      margin: 20px 0;
       font-size: 8pt;
+      border-bottom: 1px solid #ccc;
+      padding: 8px 0;
     }
     .results-table {
-      width: 30%;
+      width: 100%;
       margin: 5px 0;
-    }
-    .results-table {
+      font-family: 'Courier New', monospace;
     }
     .results-table th {
       background: #f0f0f0;
@@ -282,82 +281,82 @@ export class OrderDetailComponent implements OnInit {
       font-weight: bold;
     }
     .comments-section {
-      margin: 12px 0;
+      margin: 24px 0;
       font-size: 8pt;
+      border-top: 1px solid #ccc;
+      border-bottom: 1px solid #ccc;
+      padding: 8px 0;
     }
     .footer {
-      margin-top: 15px;
+      margin-top: 50px;
       font-size: 8pt;
-      text-align: center;
+    }
+    .mediq-brand {
+      color: darkred;
+      font-style: italic;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
   <div class="patient-info">
-    <div class="">
-      <div class="patient-left">
+    <div style="display: flex; justify-content: space-between;">
+      <div class="patient-left" style="width: 50%;">
         <div class="detail-row">
-          <span class="detail-label">Medical Record #:</span>
-          <span class="detail-value">${this.order.order_number}</span>
+          <span class="detail-label">Medical Record #</span>
+          <span class="detail-value">: ${this.order.order_number}</span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">Patient Name:</span>
-          <span class="detail-value">${this.order.patient_name}</span>
+          <span class="detail-label">Patient Name</span>
+          <span class="detail-value">: ${this.order.patient_name}</span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">Specimen ID:</span>
-          <span class="detail-value">${this.order.patient_code}</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Clinical Information:</span>
-          <span class="detail-value">${this.order.notes || 'None'}</span>
+          <span class="detail-label">Specimen ID</span>
+          <span class="detail-value">: ${this.order.patient_code}</span>
         </div>
       </div>
-      <div class="patient-right">
+      <div class="patient-right" style="width: 50%;">
         <div class="detail-row">
-          <span class="detail-label">Age / Gender:</span>
-          <span class="detail-value">${this.order.age} / ${this.order.gender}</span>
+          <span class="detail-label">Age / Gender</span>
+          <span class="detail-value">: ${this.order.age} / ${this.order.gender}</span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">Location:</span>
-          <span class="detail-value">OP</span>
+          <span class="detail-label">Requesting Physician</span>
+          <span class="detail-value">: ${this.order.doctor_name || 'N/A'}</span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">Requesting Physician:</span>
-          <span class="detail-value">${this.order.doctor_name || 'N/A'}</span>
+          <span class="detail-label">Received</span>
+          <span class="detail-value">: ${new Date(this.order.created_at).toLocaleDateString('en-GB')}</span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">Received:</span>
-          <span class="detail-value">${new Date(this.order.created_at).toLocaleDateString('en-GB')}</span>
+          <span class="detail-label">Collected on</span>
+          <span class="detail-value">: ${new Date(this.order.created_at).toLocaleDateString('en-GB')}</span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">Collected on:</span>
-          <span class="detail-value">${new Date(this.order.created_at).toLocaleDateString('en-GB')}</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Reported on:</span>
-          <span class="detail-value">${currentDate}</span>
+          <span class="detail-label">Reported on</span>
+          <span class="detail-value">: ${currentDate}</span>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="specimen-info">
-    <div class="section-header">SOURCE: ${this.order.items.map((item: any) => item.sample_type || 'BLOOD').join(', ').toUpperCase()}</div>
-  </div>
-
+  
   <div class="results-section">
+  <div class="specimen-info">
+    <div class="section-header">SOURCE: ${[...new Set(this.order.items.map((item: any) => item.sample_type))].join(', ').toUpperCase()}</div>
+  </div>
     <div class="section-header"><strong>RESULTS</strong></div>
-    <table class="results-table">
-      <thead>
+    <table>
+      <thead style="text-align: left;">
         <tr>
-          <th style="width: 40%;">Test</th>
-          <th style="width: 20%;">Result</th>
-          <th style="width: 15%;">Unit</th>
-          <th style="width: 25%;">Ref.Range</th>
+          <th style="width: 25%;">TEST</th>
+          <th style="width: 12%;">RESULT</th>
+          <th style="width: 13%;">UNIT</th>
+          <th style="width: 30%;">REFERENCE RANGE</th>
+          <th style="width: 24%;">REMARKS</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody  class="results-table">
         ${this.order.items.map((item: any) => `
           <tr>
             <td class="test-name-col">${item.test_name.toUpperCase()}</td>
@@ -366,16 +365,12 @@ export class OrderDetailComponent implements OnInit {
             </td>
             <td>${item.unit || item.master_unit || ''}</td>
             <td>${item.normal_range || item.master_normal_range || ''}</td>
+            <td>${item.remarks || ''}</td>
           </tr>
         `).join('')}
       </tbody>
     </table>
     
-    ${this.order.items.filter((item: any) => item.remarks).map((item: any) => `
-      <div style="margin: 5px 0; font-size: 8pt;">
-        <strong>REMARKS</strong> ${item.remarks}
-      </div>
-    `).join('')}
   </div>
 
   ${this.order.notes ? `
@@ -387,7 +382,7 @@ export class OrderDetailComponent implements OnInit {
 
   <div class="footer">
     <div><strong>This is a computer generated report therefore does not require any signature.</strong></div>
-    <div>Printed only: ${currentDate} ${currentTime} / MediQ System</div>
+    <div>Printed only: ${currentDate} ${currentTime} / <span class="mediq-brand">MediQ</span> System</div>
   </div>
 </body>
 </html>
