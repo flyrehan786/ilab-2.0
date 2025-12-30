@@ -76,8 +76,24 @@ export class NewOrderComponent implements OnInit {
   }
 
   addTest(test: any) {
-    if (!this.selectedTests.find(t => t.id === test.id)) {
+    if (!this.selectedTests.some(t => t.id === test.id)) {
       this.selectedTests.push({ ...test });
+    }
+  }
+
+  onPatientSelected(patient: any) {
+    if (patient) {
+      this.orderForm.patchValue({
+        patient_id: patient.id
+      });
+    }
+  }
+
+  onDoctorSelected(doctor: any) {
+    if (doctor) {
+      this.orderForm.patchValue({
+        doctor_id: doctor.id
+      });
     }
   }
 

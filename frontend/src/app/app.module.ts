@@ -22,6 +22,7 @@ import { ReportsComponent } from './components/reports/reports.component';
 import { UsersComponent } from './components/users/users.component';
 import { RegisterLabComponent } from './components/register-lab/register-lab.component';
 import { TestCategoriesComponent } from './components/test-categories/test-categories.component';
+import { SharedModule } from './shared/shared.module';
 
 @NgModule({
   declarations: [
@@ -46,7 +47,8 @@ import { TestCategoriesComponent } from './components/test-categories/test-categ
     HttpClientModule,
     FormsModule,
     ReactiveFormsModule,
-    NgChartsModule
+    NgChartsModule,
+    SharedModule
   ],
   providers: [
     {

@@ -13,22 +13,38 @@
           <div class="card-body">
             <div class="row g-3">
               <div class="col-md-6">
-                <label class="form-label d-flex justify-content-between"><span>Patient *</span><button type="button" class="btn btn-sm btn-outline-primary py-0 px-1" (click)="openPatientModal()"><i class="bi bi-plus-lg"></i></button></label>
-                <select class="form-select" formControlName="patient_id">
-                  <option value="">Select Patient</option>
-                  <option *ngFor="let patient of patients" [value]="patient.id">
-                    {{ patient.name }} ({{ patient.patient_code }})
-                  </option>
-                </select>
+                <label class="form-label d-flex justify-content-between">
+                  <span>Patient *</span>
+                  <button type="button" class="btn btn-sm btn-outline-primary py-0 px-1" (click)="openPatientModal()">
+                    <i class="bi bi-plus-lg"></i>
+                  </button>
+                </label>
+                <app-searchable-dropdown
+                  [items]="patients"
+                  bindLabel="name"
+                  bindValue="id"
+                  placeholder="Search patient..."
+                  notFoundText="No patients found"
+                  formControlName="patient_id"
+                  (itemSelected)="onPatientSelected($event)">
+                </app-searchable-dropdown>
               </div>
               <div class="col-md-6">
-                <label class="form-label d-flex justify-content-between"><span>Referring Doctor</span><button type="button" class="btn btn-sm btn-outline-primary py-0 px-1" (click)="openDoctorModal()"><i class="bi bi-plus-lg"></i></button></label>
-                <select class="form-select" formControlName="doctor_id">
-                  <option value="">Select Doctor</option>
-                  <option *ngFor="let doctor of doctors" [value]="doctor.id">
-                    {{ doctor.name }}
-                  </option>
-                </select>
+                <label class="form-label d-flex justify-content-between">
+                  <span>Referring Doctor</span>
+                  <button type="button" class="btn btn-sm btn-outline-primary py-0 px-1" (click)="openDoctorModal()">
+                    <i class="bi bi-plus-lg"></i>
+                  </button>
+                </label>
+                <app-searchable-dropdown
+                  [items]="doctors"
+                  bindLabel="name"
+                  bindValue="id"
+                  placeholder="Search doctor..."
+                  notFoundText="No doctors found"
+                  formControlName="doctor_id"
+                  (itemSelected)="onDoctorSelected($event)">
+                </app-searchable-dropdown>
               </div>
               <div class="col-md-6">
                 <label class="form-label">Priority</label>
